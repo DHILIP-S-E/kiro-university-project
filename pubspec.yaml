@@ -1,0 +1,73 @@
+name: personal_memory_os
+description: Personal Reminder & Memory OS — AWS-native Flutter app with Amazon Bedrock AI.
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navigation
+  go_router: ^13.2.1
+
+  # State management
+  provider: ^6.1.2
+
+  # AWS Amplify — authentication, API, and storage
+  amplify_flutter: ^1.7.0
+  amplify_auth_cognito: ^1.7.0
+  amplify_api: ^1.7.0
+  amplify_storage_s3: ^1.7.0
+
+  # Media capture
+  image_picker: ^1.1.2
+  camera: ^0.10.5+9
+
+  # Unique IDs
+  uuid: ^4.4.0
+
+  # Date/time formatting
+  intl: ^0.19.0
+
+  # HTTP
+  http: ^1.2.1
+
+  # Local notifications (device-side alarms)
+  flutter_local_notifications: ^17.2.1+2
+
+  # Secure local storage (tokens, user prefs)
+  flutter_secure_storage: ^9.2.2
+
+  # Shared preferences
+  shared_preferences: ^2.3.2
+
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
+  # URL launcher (for event URLs)
+  url_launcher: ^6.3.0
+
+  # File picker (for document capture)
+  file_picker: ^8.1.2
+
+  # Path provider (local file paths)
+  path_provider: ^2.1.4
+
+  # Clipboard
+  flutter_clipboard_manager: ^0.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.9
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/

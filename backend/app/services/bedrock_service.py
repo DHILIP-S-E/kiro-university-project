@@ -153,3 +153,60 @@ def answer_memory_question(question: str, docs: list) -> dict:
             "answer": "I had trouble searching your memory. Please try again.",
             "sources": [],
         }
+
+
+def summarize_event(event_title: str, event_date: str, captures_text: str) -> dict:
+    """
+    Generate a structured event summary from capture content.
+    Uses Claude 3 Sonnet for quality summarization.
+
+    Args:
+        event_title: name of the event
+        event_date: ISO 8601 date string
+        captures_text: concatenated text from all captures for this event
+
+    Returns structured summary dict with topics, takeaways, action_items, etc.
+    """
+    if not captures_text.strip():
+        return {
+            "overview": "No captures available to summarize.",
+            "key_topics": [],
+            "key_takeaways": [],
+            "things_learned": [],
+            "important_people": [],
+            "resources": [],
+            "links": [],
+            "decisions": [],
+            "action_items": [],
+        }
+
+    template = _load_prompt("summarize_event")
+    prompt = template.format(
+        event_title=event_title,
+        event_date=event_date,
+        captures_text=captures_text[:8000],  # truncate to stay within token budget
+    )
+    try:
+        raw = _invoke_claude(
+            settings.bedrock_model_sonnet, prompt, max_tokens=2048
+        )
+        result = _extract_json(raw)
+        # Ensure all expected keys present
+        for key in ["key_topics", "key_takeaways", "things_learned",
+                    "important_people", "resources", "links",
+                    "decisions", "action_items"]:
+            result.setdefault(key, [])
+        result.setdefault("overview", "")
+        return result
+    except Exception:
+        return {
+            "overview": "Summary generation failed. Please try again.",
+            "key_topics": [],
+            "key_takeaways": [],
+            "things_learned": [],
+            "important_people": [],
+            "resources": [],
+            "links": [],
+            "decisions": [],
+            "action_items": [],
+        }

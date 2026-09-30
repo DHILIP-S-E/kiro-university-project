@@ -2,6 +2,7 @@
 Event API router — full CRUD with nested deadlines, user-scoped.
 """
 
+import json
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -246,3 +247,120 @@ async def _capture_counts(event_id: str, user_id: str, db: AsyncSession) -> dict
         elif ctype == "document":
             counts["document_count"] = cnt
     return counts
+
+
+# ── Summary generation ────────────────────────────────────────────────────────
+
+@router.post("/{event_id}/generate-summary", status_code=status.HTTP_201_CREATED)
+async def generate_event_summary(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate an AI summary for an event from all its captures.
+    Saves result as a MemoryDocument and updates event.summary_id.
+
+    Flow:
+      1. Fetch event + all captures for the event
+      2. Build captures_text from content/transcription fields
+      3. Call Bedrock Claude 3 Sonnet (summarize_event)
+      4. Save MemoryDocument to DB
+      5. Update event.summary_id
+    """
+    from app.services.bedrock_service import summarize_event
+    from app.models.memory import MemoryDocument
+
+    # Verify event ownership
+    event = await _get_owned(event_id, user_id, db)
+
+    # Fetch all captures for this event
+    captures_result = await db.execute(
+        select(Capture)
+        .where(Capture.event_id == event_id, Capture.user_id == user_id)
+        .order_by(Capture.created_at.asc())
+    )
+    captures = captures_result.scalars().all()
+
+    # Build text from captures
+    lines = []
+    for c in captures:
+        label = c.capture_type.upper()
+        text = c.content or c.transcription
+        if text:
+            lines.append(f"[{label}] {text}")
+        elif c.ai_summary:
+            lines.append(f"[{label} AI SUMMARY] {c.ai_summary}")
+    captures_text = "\n\n".join(lines)
+
+    # Call Bedrock
+    summary_data = summarize_event(
+        event_title=event.title,
+        event_date=event.start_at.date().isoformat(),
+        captures_text=captures_text,
+    )
+
+    # Build search_vector for keyword search
+    topics = summary_data.get("key_topics", [])
+    takeaways = summary_data.get("key_takeaways", [])
+    search_vector = " ".join(
+        filter(None, [
+            event.title,
+            summary_data.get("overview", ""),
+            " ".join(topics),
+            " ".join(takeaways[:3]),
+        ])
+    )
+
+    # Save MemoryDocument
+    doc_id = str(uuid.uuid4())
+    doc = MemoryDocument(
+        id=doc_id,
+        user_id=user_id,
+        event_id=event_id,
+        event_title=event.title,
+        overview=summary_data.get("overview"),
+        key_topics=json.dumps(summary_data.get("key_topics", [])),
+        key_takeaways=json.dumps(summary_data.get("key_takeaways", [])),
+        things_learned=json.dumps(summary_data.get("things_learned", [])),
+        important_people=json.dumps(summary_data.get("important_people", [])),
+        resources=json.dumps(summary_data.get("resources", [])),
+        links=json.dumps(summary_data.get("links", [])),
+        decisions=json.dumps(summary_data.get("decisions", [])),
+        action_items=json.dumps(summary_data.get("action_items", [])),
+        search_vector=search_vector,
+        event_date=event.start_at,
+    )
+    db.add(doc)
+
+    # Link summary to event
+    event.summary_id = doc_id
+    event.updated_at = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(doc)
+    return doc.to_dict()
+
+
+@router.get("/{event_id}/summary")
+async def get_event_summary(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve the existing AI summary for an event."""
+    from app.models.memory import MemoryDocument
+
+    result = await db.execute(
+        select(MemoryDocument).where(
+            MemoryDocument.event_id == event_id,
+            MemoryDocument.user_id == user_id,
+        )
+    )
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(
+            status_code=404,
+            detail="No summary found. Call POST /events/{id}/generate-summary first.",
+        )
+    return doc.to_dict()

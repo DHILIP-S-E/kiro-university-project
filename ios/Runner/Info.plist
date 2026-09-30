@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Camera -->
+    <key>NSCameraUsageDescription</key>
+    <string>Personal Memory OS uses your camera to capture photos of slides, whiteboards, and documents from events.</string>
+
+    <!-- Photo library -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Personal Memory OS accesses your photo library to attach images to memories and events.</string>
+
+    <!-- Microphone -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Personal Memory OS uses your microphone to record voice notes during events.</string>
+
+    <!-- Local notifications -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <!-- App metadata -->
+    <key>CFBundleDisplayName</key>
+    <string>Memory OS</string>
+    <key>CFBundleName</key>
+    <string>personal_memory_os</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+
+    <!-- Flutter engine -->
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <!-- Allow localhost for development; tighten for production -->
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>

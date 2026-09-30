@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:personal_memory_os/core/providers/capture_provider.dart';
+import 'package:personal_memory_os/core/services/camera_service.dart';
 import 'package:personal_memory_os/core/theme/app_theme.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
 import 'package:personal_memory_os/shared/widgets/empty_state.dart';
@@ -18,8 +18,6 @@ class CaptureScreen extends StatefulWidget {
 }
 
 class _CaptureScreenState extends State<CaptureScreen> {
-  final _picker = ImagePicker();
-
   @override
   void initState() {
     super.initState();
@@ -29,21 +27,37 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _capturePhoto() async {
-    final file = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-    );
+    final file = await CameraService.capturePhoto();
     if (file == null || !mounted) return;
-    await context.read<CaptureProvider>().uploadPhoto(file: file as dynamic);
+    try {
+      await context.read<CaptureProvider>().uploadPhoto(file: file);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: AppColors.urgent,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _pickFromGallery() async {
-    final file = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
+    final file = await CameraService.pickFromGallery();
     if (file == null || !mounted) return;
-    await context.read<CaptureProvider>().uploadPhoto(file: file as dynamic);
+    try {
+      await context.read<CaptureProvider>().uploadPhoto(file: file);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: AppColors.urgent,
+          ),
+        );
+      }
+    }
   }
 
   void _openVoiceRecorder() {
@@ -160,31 +174,34 @@ class _CaptureScreenState extends State<CaptureScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: actions.map((a) {
           final (icon, label, color, fn) = a;
-          return GestureDetector(
-            onTap: fn,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: color.withOpacity(0.25)),
+          return Semantics(
+            button: true,
+            label: label,
+            child: GestureDetector(
+              onTap: fn,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: color.withOpacity(0.25)),
+                    ),
+                    child: Icon(icon, color: color, size: 22),
                   ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                  const SizedBox(height: 5),
+                  Text(
+                    label,
+                    style: AppTextStyles.caption.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }).toList(),

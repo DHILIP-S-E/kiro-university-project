@@ -27,6 +27,9 @@ dependencies:
   image_picker: ^1.1.2
   camera: ^0.10.5+9
 
+  # Audio recording
+  record: ^5.1.1
+
   # Unique IDs
   uuid: ^4.4.0
 

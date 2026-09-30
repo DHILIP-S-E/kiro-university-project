@@ -98,3 +98,58 @@ def extract_event(text: str) -> dict:
     result.setdefault("event_type", "custom")
     result.setdefault("is_virtual", False)
     return result
+
+
+def answer_memory_question(question: str, docs: list) -> dict:
+    """
+    RAG-style memory Q&A using Claude 3 Sonnet.
+    Builds context from MemoryDocument rows, calls Bedrock, returns grounded answer.
+
+    Args:
+        question: the user's natural language question
+        docs: list of MemoryDocument ORM objects
+
+    Returns: {"answer": str, "sources": [{"event_title": str, "capture_ref": str|None}]}
+    """
+    if not docs:
+        return {
+            "answer": "I couldn't find anything in your memory related to that question.",
+            "sources": [],
+        }
+
+    # Build context string from memory documents
+    context_parts = []
+    for doc in docs:
+        topics = json.loads(doc.key_topics or "[]")
+        takeaways = json.loads(doc.key_takeaways or "[]")
+        things_learned = json.loads(doc.things_learned or "[]")
+
+        section = f"Event: {doc.event_title or 'Unknown event'}\n"
+        if doc.overview:
+            section += f"Overview: {doc.overview}\n"
+        if topics:
+            section += f"Topics: {', '.join(topics)}\n"
+        if takeaways:
+            section += f"Key takeaways: {'; '.join(takeaways[:3])}\n"
+        if things_learned:
+            section += f"Things learned: {'; '.join(things_learned[:3])}\n"
+        context_parts.append(section)
+
+    context = "\n---\n".join(context_parts)
+
+    template = _load_prompt("memory_qa")
+    prompt = template.format(context=context, question=question)
+
+    try:
+        raw = _invoke_claude(
+            settings.bedrock_model_sonnet, prompt, max_tokens=1024
+        )
+        result = _extract_json(raw)
+        result.setdefault("answer", "I couldn't find a clear answer in your memory.")
+        result.setdefault("sources", [])
+        return result
+    except Exception as e:
+        return {
+            "answer": "I had trouble searching your memory. Please try again.",
+            "sources": [],
+        }

@@ -42,6 +42,9 @@ dependencies:
   # Local notifications (device-side alarms)
   flutter_local_notifications: ^17.2.1+2
 
+  # Timezone support for scheduled notifications
+  timezone: ^0.9.4
+
   # Secure local storage (tokens, user prefs)
   flutter_secure_storage: ^9.2.2
 

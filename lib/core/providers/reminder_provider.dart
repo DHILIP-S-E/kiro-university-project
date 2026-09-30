@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:personal_memory_os/core/models/reminder.dart';
 import 'package:personal_memory_os/core/services/reminder_service.dart';
+import 'package:personal_memory_os/core/services/notification_service.dart';
 
 enum ReminderFilter { all, today, upcoming, recurring, deadlines, completed, overdue }
 
@@ -18,6 +19,8 @@ class ReminderProvider extends ChangeNotifier {
   ReminderFilter get activeFilter => _activeFilter;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  // ── Computed lists ────────────────────────────────────────────────────────
 
   List<Reminder> get todayReminders {
     final now = DateTime.now();
@@ -95,12 +98,20 @@ class ReminderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Data loading ──────────────────────────────────────────────────────────
+
   Future<void> loadReminders() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     try {
       _reminders = await _service.fetchReminders();
+      // Re-schedule local notifications for all active reminders
+      for (final r in _reminders) {
+        if (r.status == ReminderStatus.active && r.alarmEnabled) {
+          await NotificationService.scheduleReminder(r);
+        }
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -109,10 +120,16 @@ class ReminderProvider extends ChangeNotifier {
     }
   }
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
+
   Future<void> createReminder(Reminder reminder) async {
     try {
       final created = await _service.createReminder(reminder);
       _reminders.add(created);
+      // Schedule device-side local notification (layer 2 of two-layer alarm)
+      if (created.alarmEnabled) {
+        await NotificationService.scheduleReminder(created);
+      }
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -124,9 +141,12 @@ class ReminderProvider extends ChangeNotifier {
   Future<void> completeReminder(String id) async {
     try {
       await _service.updateReminderStatus(id, ReminderStatus.completed);
+      // Cancel local notification — reminder is done
+      await NotificationService.cancelReminder(id);
       final index = _reminders.indexWhere((r) => r.id == id);
       if (index != -1) {
-        _reminders[index] = _reminders[index].copyWith(status: ReminderStatus.completed);
+        _reminders[index] =
+            _reminders[index].copyWith(status: ReminderStatus.completed);
         notifyListeners();
       }
     } catch (e) {
@@ -141,10 +161,16 @@ class ReminderProvider extends ChangeNotifier {
       await _service.snoozeReminder(id, newTime);
       final index = _reminders.indexWhere((r) => r.id == id);
       if (index != -1) {
-        _reminders[index] = _reminders[index].copyWith(
+        final updated = _reminders[index].copyWith(
           status: ReminderStatus.snoozed,
           scheduledAt: newTime,
         );
+        _reminders[index] = updated;
+        // Cancel old notification and reschedule at new time
+        await NotificationService.cancelReminder(id);
+        if (updated.alarmEnabled) {
+          await NotificationService.scheduleReminder(updated);
+        }
         notifyListeners();
       }
     } catch (e) {
@@ -156,6 +182,8 @@ class ReminderProvider extends ChangeNotifier {
   Future<void> deleteReminder(String id) async {
     try {
       await _service.deleteReminder(id);
+      // Cancel local notification before removing from list
+      await NotificationService.cancelReminder(id);
       _reminders.removeWhere((r) => r.id == id);
       notifyListeners();
     } catch (e) {

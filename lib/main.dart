@@ -13,9 +13,21 @@ import 'package:personal_memory_os/core/services/event_service.dart';
 import 'package:personal_memory_os/core/services/capture_service.dart';
 import 'package:personal_memory_os/core/services/memory_service.dart';
 import 'package:personal_memory_os/core/services/ai_service.dart';
+import 'package:personal_memory_os/core/services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize local notification service (device-side alarm layer)
+  await NotificationService.initialize(
+    onNotificationTap: (payload) {
+      // Navigate to reminder when tapped — handled via GoRouter
+    },
+    onActionTap: (actionId, payload) {
+      // 'action_done' and 'action_snooze' handled here
+      // In full implementation: look up provider and call complete/snooze
+    },
+  );
 
   // In production: await Amplify.addPlugins([...]) and configure here.
   // await Amplify.configure(amplifyconfig);

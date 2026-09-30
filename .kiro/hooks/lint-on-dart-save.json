@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Dart lint on save",
+      "trigger": "PostFileSave",
+      "description": "Run dart analyze on the lib folder every time a .dart file is saved, surfacing errors immediately.",
+      "matcher": "\\.dart$",
+      "action": {
+        "type": "command",
+        "command": "cd /d \"%WORKSPACE_DIR%\" && dart analyze lib --fatal-infos 2>&1 | head -30",
+        "timeout": 30
+      }
+    }
+  ]
+}

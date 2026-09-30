@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Load project context on session start",
+      "trigger": "SessionStart",
+      "description": "At session start, remind Kiro of the current project state, open tasks, and key architectural principles so context is always fresh.",
+      "action": {
+        "type": "agent",
+        "prompt": "Session started on the Personal Memory OS project. Load the current context:\n1. Read .kiro/specs/personal-memory-os.md to find the next incomplete task\n2. Remind yourself: AI calls happen server-side (Lambda → Bedrock), never from Flutter directly\n3. Remind yourself: two-layer alarm strategy (EventBridge Scheduler + flutter_local_notifications)\n4. Remind yourself: all colors from AppColors, all text styles from AppTextStyles\n5. Surface the next actionable task to the user if they haven't specified one"
+      }
+    }
+  ]
+}

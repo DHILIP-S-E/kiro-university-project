@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Review Dart write against project standards",
+      "trigger": "PreToolUse",
+      "description": "Before any file write, verify the change follows project steering standards: no inline hex colors, no inline TextStyle, no hard-coded secrets, AI calls only in service layer (never directly from screens/widgets), and abstract service pattern is preserved.",
+      "matcher": "lib/.*\\.dart$",
+      "action": {
+        "type": "agent",
+        "prompt": "Before completing this file write, verify it follows our project-standards steering rules:\n1. No inline hex color values — use AppColors.*\n2. No inline TextStyle(fontSize:...) — use AppTextStyles.*\n3. No secrets, API keys, or ARNs in source code\n4. AI / Bedrock calls must only appear in lib/core/services/ — never in screens or widgets\n5. Abstract service interface pattern is preserved (abstract class + implementation)\n6. All screens use AppColors.background as scaffold background color\nIf any rule is violated, flag it clearly before the write proceeds."
+      }
+    }
+  ]
+}

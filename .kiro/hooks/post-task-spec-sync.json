@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Sync spec after task completion",
+      "trigger": "PostTaskExec",
+      "description": "After each spec task is completed, remind Kiro to update the task checklist in the spec file and verify that the implementation follows the product principles from the spec.",
+      "action": {
+        "type": "agent",
+        "prompt": "A spec task has just been completed. Do the following:\n1. Update the task checklist in .kiro/specs/personal-memory-os.md — mark the completed task with [x]\n2. Verify the implementation follows the product principles:\n   - AI suggests, user confirms important actions\n   - AI interprets; deterministic systems execute\n   - Never silently lose a reminder\n   - Every AI answer is traceable to stored memory\n3. If any principle is not yet met, note it as a follow-up task."
+      }
+    }
+  ]
+}

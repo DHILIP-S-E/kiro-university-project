@@ -12,7 +12,6 @@ import 'package:personal_memory_os/shared/widgets/reminder_card.dart';
 import 'package:personal_memory_os/shared/widgets/event_card.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
 import 'package:personal_memory_os/shared/widgets/section_header.dart';
-import 'package:personal_memory_os/shared/widgets/empty_state.dart';
 import 'package:personal_memory_os/features/today/widgets/now_card.dart';
 import 'package:personal_memory_os/features/today/widgets/quick_capture_bar.dart';
 

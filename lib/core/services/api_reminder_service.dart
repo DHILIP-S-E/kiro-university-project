@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:personal_memory_os/core/models/reminder.dart';
 import 'package:personal_memory_os/core/services/reminder_service.dart';
 import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_mapper.dart';
 
 /// Real implementation of [ReminderService] that calls the FastAPI backend.
 /// Replaces [StubReminderService] in production.
@@ -13,7 +13,7 @@ class ApiReminderService implements ReminderService {
   @override
   Future<List<Reminder>> fetchReminders() async {
     final data = await _client.get('/reminders') as List<dynamic>;
-    return data.map((j) => Reminder.fromJson(j as Map<String, dynamic>)).toList();
+    return data.map((j) => reminderFromApi(j)).toList();
   }
 
   @override
@@ -32,7 +32,7 @@ class ApiReminderService implements ReminderService {
       'context_id': reminder.contextId,
       'offsets': reminder.offsets.map((o) => o.offset).toList(),
     });
-    return Reminder.fromJson(data as Map<String, dynamic>);
+    return reminderFromApi(data);
   }
 
   @override
@@ -43,7 +43,7 @@ class ApiReminderService implements ReminderService {
       'priority': reminder.priority.name,
       'alarm_enabled': reminder.alarmEnabled,
     });
-    return Reminder.fromJson(data as Map<String, dynamic>);
+    return reminderFromApi(data);
   }
 
   @override

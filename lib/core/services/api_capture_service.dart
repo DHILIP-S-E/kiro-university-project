@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:personal_memory_os/core/models/capture.dart';
 import 'package:personal_memory_os/core/services/capture_service.dart';
 import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_mapper.dart';
 
 /// Real implementation of [CaptureService].
 /// Upload flow:
@@ -16,7 +17,7 @@ class ApiCaptureService implements CaptureService {
   @override
   Future<List<Capture>> fetchCaptures() async {
     final data = await _client.get('/captures') as List<dynamic>;
-    return data.map((j) => Capture.fromJson(j as Map<String, dynamic>)).toList();
+    return data.map((j) => captureFromApi(j)).toList();
   }
 
   @override
@@ -53,7 +54,7 @@ class ApiCaptureService implements CaptureService {
       'mime_type': contentType,
     }) as Map<String, dynamic>;
 
-    return Capture.fromJson(captureData);
+    return captureFromApi(captureData);
   }
 
   @override
@@ -62,7 +63,7 @@ class ApiCaptureService implements CaptureService {
       'content': text,
       if (eventId != null) 'event_id': eventId,
     }) as Map<String, dynamic>;
-    return Capture.fromJson(data);
+    return captureFromApi(data);
   }
 
   @override
@@ -71,7 +72,7 @@ class ApiCaptureService implements CaptureService {
       'url': url,
       if (eventId != null) 'event_id': eventId,
     }) as Map<String, dynamic>;
-    return Capture.fromJson(data);
+    return captureFromApi(data);
   }
 
   @override

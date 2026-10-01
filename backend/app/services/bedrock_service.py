@@ -11,6 +11,7 @@ from pathlib import Path
 
 import boto3
 from app.config import settings
+from app.services.reminder_parser import normalize_reminder
 
 _bedrock_client = None
 
@@ -29,6 +30,13 @@ def _get_client():
 def _load_prompt(name: str) -> str:
     path = Path(__file__).parent.parent / "prompts" / f"{name}.txt"
     return path.read_text(encoding="utf-8")
+
+
+def _render(template: str, **values: str) -> str:
+    """Substitute {name} placeholders only; prompts contain literal JSON braces."""
+    for key, value in values.items():
+        template = template.replace("{" + key + "}", str(value))
+    return template
 
 
 def _invoke_claude(model_id: str, prompt: str, max_tokens: int = 1024) -> str:
@@ -65,20 +73,14 @@ def parse_reminder(text: str, timezone: str = "UTC") -> dict:
     Returns: {title, type, scheduled_at, priority, offsets}
     """
     template = _load_prompt("parse_reminder")
-    prompt = template.format(
+    prompt = _render(
+        template,
         current_datetime=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S UTC"),
         timezone=timezone,
         input=text,
     )
     raw = _invoke_claude(settings.bedrock_model_haiku, prompt, max_tokens=512)
-    result = _extract_json(raw)
-    # Validate and sanitise required fields
-    result.setdefault("title", text[:100])
-    result.setdefault("type", "time")
-    result.setdefault("priority", "medium")
-    result.setdefault("offsets", [])
-    result.setdefault("scheduled_at", None)
-    return result
+    return normalize_reminder(_extract_json(raw), fallback_text=text[:100])
 
 
 def extract_event(text: str) -> dict:
@@ -88,7 +90,8 @@ def extract_event(text: str) -> dict:
     Returns: {title, event_type, start_at, end_at, location, event_url, ...}
     """
     template = _load_prompt("extract_event")
-    prompt = template.format(
+    prompt = _render(
+        template,
         current_date=datetime.utcnow().date().isoformat(),
         text=text,
     )
@@ -138,7 +141,7 @@ def answer_memory_question(question: str, docs: list) -> dict:
     context = "\n---\n".join(context_parts)
 
     template = _load_prompt("memory_qa")
-    prompt = template.format(context=context, question=question)
+    prompt = _render(template, context=context, question=question)
 
     try:
         raw = _invoke_claude(
@@ -181,7 +184,8 @@ def summarize_event(event_title: str, event_date: str, captures_text: str) -> di
         }
 
     template = _load_prompt("summarize_event")
-    prompt = template.format(
+    prompt = _render(
+        template,
         event_title=event_title,
         event_date=event_date,
         captures_text=captures_text[:8000],  # truncate to stay within token budget

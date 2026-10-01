@@ -11,6 +11,7 @@ import 'package:personal_memory_os/features/memory/screens/ai_chat_screen.dart';
 import 'package:personal_memory_os/features/events/screens/event_create_screen.dart';
 import 'package:personal_memory_os/features/events/screens/event_detail_screen.dart';
 import 'package:personal_memory_os/features/settings/settings_screen.dart';
+import 'package:personal_memory_os/core/providers/auth_provider.dart';
 import 'package:personal_memory_os/shell.dart';
 
 class AppRoutes {
@@ -31,9 +32,25 @@ class AppRoutes {
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-final appRouter = GoRouter(
+/// Where an unauthenticated / authenticated user must be. Null = stay put.
+/// Pure so it can be unit-tested without a widget tree.
+String? authRedirect(AuthStatus status, String location) {
+  final onAuth = location == AppRoutes.auth;
+  switch (status) {
+    case AuthStatus.unknown:
+      return null; // still restoring the session; don't flash the login screen
+    case AuthStatus.unauthenticated:
+      return onAuth ? null : AppRoutes.auth;
+    case AuthStatus.authenticated:
+      return onAuth ? AppRoutes.today : null;
+  }
+}
+
+GoRouter createAppRouter(AuthProvider auth) => GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: AppRoutes.today,
+  refreshListenable: auth,
+  redirect: (context, state) => authRedirect(auth.status, state.matchedLocation),
   routes: [
     GoRoute(
       path: AppRoutes.auth,

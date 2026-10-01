@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_memory_os/core/providers/capture_provider.dart';
 import 'package:personal_memory_os/core/services/camera_service.dart';

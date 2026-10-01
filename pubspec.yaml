@@ -17,12 +17,6 @@ dependencies:
   # State management
   provider: ^6.1.2
 
-  # AWS Amplify — authentication, API, and storage
-  amplify_flutter: ^1.7.0
-  amplify_auth_cognito: ^1.7.0
-  amplify_api: ^1.7.0
-  amplify_storage_s3: ^1.7.0
-
   # Media capture
   image_picker: ^1.1.2
   camera: ^0.10.5+9
@@ -62,9 +56,6 @@ dependencies:
 
   # Path provider (local file paths)
   path_provider: ^2.1.4
-
-  # Clipboard
-  flutter_clipboard_manager: ^0.0.2
 
 dev_dependencies:
   flutter_test:

@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_user_id
 from app.database import get_db
 from app.models.capture import Capture
+from app.services.capture_queue import enqueue_text_capture
 from app.services.s3_service import (
     generate_upload_url,
     generate_download_url,
@@ -145,6 +146,7 @@ async def create_text_note(
     db.add(capture)
     await db.commit()
     await db.refresh(capture)
+    enqueue_text_capture(capture.id)
     return capture.to_dict()
 
 
@@ -169,6 +171,7 @@ async def save_link(
     db.add(capture)
     await db.commit()
     await db.refresh(capture)
+    enqueue_text_capture(capture.id)
     return capture.to_dict()
 
 

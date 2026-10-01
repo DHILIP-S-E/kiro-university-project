@@ -8,7 +8,6 @@ import 'package:personal_memory_os/core/theme/app_theme.dart';
 import 'package:personal_memory_os/core/utils/date_utils.dart';
 import 'package:personal_memory_os/core/router/app_router.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
-import 'package:personal_memory_os/shared/widgets/empty_state.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final String eventId;

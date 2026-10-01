@@ -8,7 +8,6 @@ import 'package:personal_memory_os/core/utils/date_utils.dart';
 import 'package:personal_memory_os/core/router/app_router.dart';
 import 'package:personal_memory_os/shared/widgets/empty_state.dart';
 import 'package:personal_memory_os/shared/widgets/section_header.dart';
-import 'package:personal_memory_os/shared/widgets/event_card.dart';
 
 class MemoryScreen extends StatefulWidget {
   const MemoryScreen({super.key});

@@ -1,6 +1,7 @@
 import 'package:personal_memory_os/core/models/memory_document.dart';
 import 'package:personal_memory_os/core/services/memory_service.dart';
 import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_mapper.dart';
 
 /// Real implementation of [MemoryService] that calls the FastAPI backend.
 class ApiMemoryService implements MemoryService {
@@ -12,7 +13,7 @@ class ApiMemoryService implements MemoryService {
   Future<List<MemoryDocument>> fetchMemoryDocuments() async {
     final data = await _client.get('/memory') as List<dynamic>;
     return data
-        .map((j) => MemoryDocument.fromJson(j as Map<String, dynamic>))
+        .map((j) => memoryFromApi(j))
         .toList();
   }
 
@@ -23,7 +24,7 @@ class ApiMemoryService implements MemoryService {
       query: {'q': query},
     ) as List<dynamic>;
     return data
-        .map((j) => MemoryDocument.fromJson(j as Map<String, dynamic>))
+        .map((j) => memoryFromApi(j))
         .toList();
   }
 }

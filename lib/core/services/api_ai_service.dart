@@ -3,6 +3,7 @@ import 'package:personal_memory_os/core/models/reminder.dart';
 import 'package:personal_memory_os/core/models/event.dart';
 import 'package:personal_memory_os/core/services/ai_service.dart';
 import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_mapper.dart';
 
 /// Real implementation of [AiService] — calls FastAPI which calls Bedrock.
 /// Flutter never calls Bedrock directly.
@@ -99,7 +100,7 @@ class ApiAiService implements AiService {
     }) as Map<String, dynamic>;
 
     final sources = (data['sources'] as List<dynamic>? ?? [])
-        .map((s) => AiMessageSource.fromJson(s as Map<String, dynamic>))
+        .map((s) => aiSourceFromApi(s))
         .toList();
 
     return AiAnswer(

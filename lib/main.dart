@@ -1,34 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:personal_memory_os/core/router/app_router.dart';
 import 'package:personal_memory_os/core/theme/app_theme.dart';
-import 'package:personal_memory_os/core/config.dart';
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
 import 'package:personal_memory_os/core/providers/reminder_provider.dart';
 import 'package:personal_memory_os/core/providers/event_provider.dart';
 import 'package:personal_memory_os/core/providers/capture_provider.dart';
 import 'package:personal_memory_os/core/providers/memory_provider.dart';
 
-// Abstract service interfaces
-import 'package:personal_memory_os/core/services/auth_service.dart';
+// Abstract service interfaces (+ stub implementations, used when USE_REAL_BACKEND=false)
+import 'package:personal_memory_os/core/services/account_service.dart';
 import 'package:personal_memory_os/core/services/ai_service.dart';
-
-// Stub implementations (used when USE_REAL_BACKEND=false)
-import 'package:personal_memory_os/core/services/reminder_service.dart';
-import 'package:personal_memory_os/core/services/event_service.dart';
+import 'package:personal_memory_os/core/services/auth_service.dart';
 import 'package:personal_memory_os/core/services/capture_service.dart';
+import 'package:personal_memory_os/core/services/event_service.dart';
 import 'package:personal_memory_os/core/services/memory_service.dart';
+import 'package:personal_memory_os/core/services/reminder_service.dart';
 
-// Real API implementations (used when USE_REAL_BACKEND=true)
-import 'package:personal_memory_os/core/services/api_client.dart';
-import 'package:personal_memory_os/core/services/api_reminder_service.dart';
-import 'package:personal_memory_os/core/services/api_event_service.dart';
-import 'package:personal_memory_os/core/services/api_capture_service.dart';
-import 'package:personal_memory_os/core/services/api_memory_service.dart';
+// Real implementations (used when USE_REAL_BACKEND=true)
 import 'package:personal_memory_os/core/services/api_ai_service.dart';
+import 'package:personal_memory_os/core/services/api_capture_service.dart';
+import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_event_service.dart';
+import 'package:personal_memory_os/core/services/api_memory_service.dart';
+import 'package:personal_memory_os/core/services/api_reminder_service.dart';
+import 'package:personal_memory_os/core/services/cognito_auth_service.dart';
 import 'package:personal_memory_os/core/services/notification_service.dart';
 
-/// Toggle this to switch between stub data and real FastAPI backend.
+// Offline-first sync (spec R6)
+import 'package:personal_memory_os/core/sync/offline_services.dart';
+import 'package:personal_memory_os/core/sync/prefs_store.dart';
+import 'package:personal_memory_os/core/sync/sync_coordinator.dart';
+import 'package:personal_memory_os/core/sync/sync_queue.dart';
+
+/// Toggle between stub data and the real FastAPI + Cognito backend.
 /// In production, set via --dart-define=USE_REAL_BACKEND=true
 const bool _useRealBackend = bool.fromEnvironment(
   'USE_REAL_BACKEND',
@@ -48,116 +55,109 @@ void main() async {
     },
   );
 
-  // In production: await Amplify.configure(amplifyconfig);
-
-  runApp(PersonalMemoryOsApp(useRealBackend: _useRealBackend));
+  final prefs = await SharedPreferences.getInstance();
+  runApp(PersonalMemoryOsApp(
+    useRealBackend: _useRealBackend,
+    store: PrefsKeyValueStore(prefs),
+  ));
 }
 
-class PersonalMemoryOsApp extends StatelessWidget {
+class PersonalMemoryOsApp extends StatefulWidget {
   final bool useRealBackend;
+  final KeyValueStore store;
 
-  const PersonalMemoryOsApp({super.key, this.useRealBackend = false});
+  const PersonalMemoryOsApp({
+    super.key,
+    this.useRealBackend = false,
+    required this.store,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    // Auth service (always stub until Amplify is configured)
-    final authService = StubAuthService();
+  State<PersonalMemoryOsApp> createState() => _PersonalMemoryOsAppState();
+}
 
-    // Reminder token getter for API client (returns Cognito JWT in production)
-    Future<String?> getToken() async {
-      // TODO: return await Amplify.Auth.fetchAuthSession()... .userPoolTokensResult...
-      // For now returns null (backend auth middleware accepts this in dev mode)
-      return null;
+class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
+  late final AuthService _authService;
+  late final AiService _aiService;
+  late final AccountService _accountService;
+  late final AuthProvider _auth;
+  late final ReminderProvider _reminders;
+  late final EventProvider _events;
+  late final CaptureProvider _captures;
+  late final MemoryProvider _memory;
+  late final GoRouter _router;
+  SyncCoordinator? _sync;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.useRealBackend) {
+      final cognito = CognitoAuthService();
+      final client = ApiClient(getToken: cognito.getAccessToken);
+      final queue = SyncQueue(widget.store);
+
+      final remoteReminders = ApiReminderService(client);
+      final remoteCaptures = ApiCaptureService(client);
+
+      _authService = cognito;
+      _aiService = ApiAiService(client);
+      _accountService = ApiAccountService(client);
+      _reminders = ReminderProvider(
+          OfflineReminderService(remoteReminders, queue, widget.store));
+      _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue));
+      _events = EventProvider(ApiEventService(client));
+      _memory = MemoryProvider(ApiMemoryService(client), _aiService);
+
+      // Replay offline work on launch and whenever connectivity returns.
+      final executor = SyncExecutor(remoteReminders, remoteCaptures);
+      _sync = SyncCoordinator(
+        queue,
+        executor.call,
+        onFlushed: (result) {
+          if (result.synced > 0) {
+            _reminders.loadReminders();
+            _captures.loadCaptures();
+          }
+        },
+      )..start();
+    } else {
+      _authService = StubAuthService();
+      _aiService = StubAiService();
+      _accountService = StubAccountService();
+      _reminders = ReminderProvider(StubReminderService());
+      _captures = CaptureProvider(StubCaptureService());
+      _events = EventProvider(StubEventService());
+      _memory = MemoryProvider(StubMemoryService(), _aiService);
     }
 
-    // Service wiring — swap stubs for real API implementations
-    final reminderService = useRealBackend
-        ? ApiReminderService(ApiClient(getToken: getToken))
-        : StubReminderService() as dynamic;
-
-    final eventService = useRealBackend
-        ? ApiEventService(ApiClient(getToken: getToken))
-        : StubEventService() as dynamic;
-
-    final captureService = useRealBackend
-        ? ApiCaptureService(ApiClient(getToken: getToken))
-        : StubCaptureService() as dynamic;
-
-    final memoryService = useRealBackend
-        ? ApiMemoryService(ApiClient(getToken: getToken))
-        : StubMemoryService() as dynamic;
-
-    final aiService = useRealBackend
-        ? ApiAiService(ApiClient(getToken: getToken))
-        : StubAiService() as dynamic;
-
-    return MultiProvider(
-      providers: [
-        Provider<AuthService>.value(value: authService),
-        Provider<AiService>.value(value: aiService),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(authService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ReminderProvider(reminderService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => EventProvider(eventService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => CaptureProvider(captureService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => MemoryProvider(memoryService, aiService),
-        ),
-      ],
-      child: MaterialApp.router(
-        title: 'Personal Memory OS',
-        theme: AppTheme.dark,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
-      ),
-    );
+    _auth = AuthProvider(_authService)..checkAuthState();
+    _router = createAppRouter(_auth);
   }
-}
 
-class PersonalMemoryOsApp extends StatelessWidget {
-  const PersonalMemoryOsApp({super.key});
+  @override
+  void dispose() {
+    _sync?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Wire up services (swap stubs for real implementations post-backend setup)
-    final authService = StubAuthService();
-    final reminderService = StubReminderService();
-    final eventService = StubEventService();
-    final captureService = StubCaptureService();
-    final memoryService = StubMemoryService();
-    final aiService = StubAiService();
-
     return MultiProvider(
       providers: [
-        Provider<AuthService>.value(value: authService),
-        Provider<AiService>.value(value: aiService),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(authService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ReminderProvider(reminderService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => EventProvider(eventService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => CaptureProvider(captureService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => MemoryProvider(memoryService, aiService),
-        ),
+        Provider<AuthService>.value(value: _authService),
+        Provider<AiService>.value(value: _aiService),
+        Provider<AccountService>.value(value: _accountService),
+        ChangeNotifierProvider.value(value: _auth),
+        ChangeNotifierProvider.value(value: _reminders),
+        ChangeNotifierProvider.value(value: _events),
+        ChangeNotifierProvider.value(value: _captures),
+        ChangeNotifierProvider.value(value: _memory),
       ],
       child: MaterialApp.router(
         title: 'Personal Memory OS',
         theme: AppTheme.dark,
-        routerConfig: appRouter,
+        routerConfig: _router,
         debugShowCheckedModeBanner: false,
       ),
     );

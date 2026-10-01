@@ -1,17 +1,17 @@
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
 
-/// Abstracts Amazon Cognito authentication via AWS Amplify.
-/// Swap the stub implementations with real Amplify calls once the backend is provisioned.
+/// Abstracts Amazon Cognito authentication.
+/// [StubAuthService] for offline demos; CognitoAuthService for the real user pool.
 abstract class AuthService {
   Future<AppUser?> getCurrentUser();
   Future<AppUser> signInWithEmail(String email, String password);
   Future<AppUser> signInWithGoogle();
   Future<AppUser> signUp(String email, String password, String displayName);
+  Future<void> confirmSignUp(String email, String code);
   Future<void> signOut();
 }
 
 /// Stub implementation — returns mock data in development.
-/// Replace with AmplifyAuthService using amplify_auth_cognito package.
 class StubAuthService implements AuthService {
   AppUser? _currentUser;
 
@@ -54,6 +54,9 @@ class StubAuthService implements AuthService {
     );
     return _currentUser!;
   }
+
+  @override
+  Future<void> confirmSignUp(String email, String code) async {}
 
   @override
   Future<void> signOut() async {

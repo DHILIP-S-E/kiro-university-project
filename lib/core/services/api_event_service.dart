@@ -1,6 +1,7 @@
 import 'package:personal_memory_os/core/models/event.dart';
 import 'package:personal_memory_os/core/services/event_service.dart';
 import 'package:personal_memory_os/core/services/api_client.dart';
+import 'package:personal_memory_os/core/services/api_mapper.dart';
 
 /// Real implementation of [EventService] that calls the FastAPI backend.
 class ApiEventService implements EventService {
@@ -11,7 +12,7 @@ class ApiEventService implements EventService {
   @override
   Future<List<Event>> fetchEvents() async {
     final data = await _client.get('/events') as List<dynamic>;
-    return data.map((j) => Event.fromJson(j as Map<String, dynamic>)).toList();
+    return data.map((j) => eventFromApi(j)).toList();
   }
 
   @override
@@ -34,7 +35,7 @@ class ApiEventService implements EventService {
         'deadline_at': d.deadlineAt.toUtc().toIso8601String(),
       }).toList(),
     });
-    return Event.fromJson(data as Map<String, dynamic>);
+    return eventFromApi(data);
   }
 
   @override
@@ -49,7 +50,7 @@ class ApiEventService implements EventService {
       'event_url': event.eventUrl,
       'organizer': event.organizer,
     });
-    return Event.fromJson(data as Map<String, dynamic>);
+    return eventFromApi(data);
   }
 
   @override

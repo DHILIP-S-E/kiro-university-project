@@ -17,6 +17,9 @@ from app.auth import get_current_user_id
 from app.database import get_db
 from app.models.event import Event, EventDeadline
 from app.models.capture import Capture
+from app.models.reminder import Reminder
+from app.services import knowledge_base
+from app.services.event_policy import build_reminder_policy
 
 router = APIRouter()
 
@@ -217,6 +220,102 @@ async def add_deadline(
     return deadline.to_dict()
 
 
+@router.get("/{event_id}/reminder-policy")
+async def preview_reminder_policy(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Preview the smart reminder policy for this event (R2.4). Nothing is created."""
+    event = await _get_owned(event_id, user_id, db)
+    return [
+        {**r, "scheduled_at": r["scheduled_at"].isoformat()}
+        for r in _policy_for(event)
+    ]
+
+
+@router.post("/{event_id}/reminder-policy", status_code=status.HTTP_201_CREATED)
+async def apply_reminder_policy(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create the reminders from the policy the user confirmed."""
+    event = await _get_owned(event_id, user_id, db)
+    now = datetime.utcnow()
+    created = []
+    for spec in _policy_for(event):
+        reminder = Reminder(
+            id=str(uuid.uuid4()), user_id=user_id, source="event",
+            context_id=event_id, timezone=event.timezone,
+            created_at=now, updated_at=now, offsets="[]", **spec,
+        )
+        db.add(reminder)
+        created.append(reminder)
+    await db.commit()
+    return [r.to_dict() for r in created]
+
+
+def _policy_for(event: Event) -> list[dict]:
+    from datetime import timezone as _tz
+    now = datetime.now(_tz.utc)
+    start = event.start_at if event.start_at.tzinfo else event.start_at.replace(tzinfo=_tz.utc)
+    deadlines = [
+        (d.title, d.deadline_at if d.deadline_at.tzinfo else d.deadline_at.replace(tzinfo=_tz.utc))
+        for d in event.deadlines
+    ]
+    return build_reminder_policy(event.title, event.event_type, start, deadlines, now)
+
+
+@router.get("/{event_id}/reminder-policy")
+async def preview_reminder_policy(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Preview the smart reminder policy for this event (R2.4). Nothing is created."""
+    event = await _get_owned(event_id, user_id, db)
+    return [
+        {**r, "scheduled_at": r["scheduled_at"].isoformat()}
+        for r in _policy_for(event)
+    ]
+
+
+@router.post("/{event_id}/reminder-policy", status_code=status.HTTP_201_CREATED)
+async def apply_reminder_policy(
+    event_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create the reminders from the policy the user confirmed."""
+    event = await _get_owned(event_id, user_id, db)
+    now = datetime.utcnow()
+    created = []
+    for spec in _policy_for(event):
+        reminder = Reminder(
+            id=str(uuid.uuid4()), user_id=user_id, source="event",
+            context_id=event_id, timezone=event.timezone,
+            created_at=now, updated_at=now, offsets="[]", **spec,
+        )
+        db.add(reminder)
+        created.append(reminder)
+    await db.commit()
+    return [r.to_dict() for r in created]
+
+
+def _policy_for(event: Event) -> list[dict]:
+    from datetime import timezone as tz
+
+    def aware(dt: datetime) -> datetime:
+        return dt if dt.tzinfo else dt.replace(tzinfo=tz.utc)
+
+    deadlines = [(d.title, aware(d.deadline_at)) for d in event.deadlines]
+    return build_reminder_policy(
+        event.title, event.event_type, aware(event.start_at), deadlines,
+        datetime.now(tz.utc),
+    )
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 async def _get_owned(event_id: str, user_id: str, db: AsyncSession) -> Event:
@@ -339,6 +438,7 @@ async def generate_event_summary(
 
     await db.commit()
     await db.refresh(doc)
+    knowledge_base.sync_document(doc.to_dict())
     return doc.to_dict()
 
 

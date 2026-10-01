@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:personal_memory_os/core/services/auth_service.dart';
+import 'package:personal_memory_os/core/services/cognito_auth_service.dart'
+    show ConfirmationRequiredException;
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -25,6 +27,10 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.unknown;
   AppUser? _user;
   String? _error;
+  String? _pendingConfirmationEmail;
+
+  /// Set after a real sign-up until the emailed code is confirmed.
+  String? get pendingConfirmationEmail => _pendingConfirmationEmail;
 
   AuthStatus get status => _status;
   AppUser? get user => _user;
@@ -82,6 +88,25 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
+    } on ConfirmationRequiredException catch (e) {
+      // Not an error: the user must now enter the emailed verification code.
+      _pendingConfirmationEmail = e.email;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Complete sign-up with the emailed code, then sign the user in.
+  Future<bool> confirmSignUp(String email, String code, String password) async {
+    try {
+      _error = null;
+      await _authService.confirmSignUp(email, code);
+      _pendingConfirmationEmail = null;
+      return signInWithEmail(email, password);
     } catch (e) {
       _error = e.toString();
       notifyListeners();

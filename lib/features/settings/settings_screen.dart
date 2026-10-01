@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
+import 'package:personal_memory_os/core/services/account_service.dart';
 import 'package:personal_memory_os/core/theme/app_theme.dart';
-import 'package:personal_memory_os/core/router/app_router.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -104,8 +104,8 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.download_outlined,
                 title: 'Export my data',
-                subtitle: 'JSON, Markdown, or ZIP',
-                onTap: () {},
+                subtitle: 'Copies all your data as JSON',
+                onTap: () => _exportData(context),
               ),
               _SettingsTile(
                 icon: Icons.delete_sweep_outlined,
@@ -246,6 +246,18 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _exportData(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final json = await context.read<AccountService>().exportData();
+      await Clipboard.setData(ClipboardData(text: json));
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Your data was copied as JSON')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    }
+  }
+
   void _signOut(BuildContext context) {
     showDialog(
       context: context,
@@ -291,7 +303,18 @@ class SettingsScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final messenger = ScaffoldMessenger.of(context);
+              final auth = context.read<AuthProvider>();
+              try {
+                await context.read<AccountService>().deleteAllData();
+                await auth.signOut();
+              } catch (e) {
+                messenger.showSnackBar(
+                    SnackBar(content: Text('Could not delete data: $e')));
+              }
+            },
             style: FilledButton.styleFrom(backgroundColor: AppColors.urgent),
             child: const Text('Delete everything'),
           ),

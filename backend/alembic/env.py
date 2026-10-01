@@ -10,8 +10,7 @@ import sys
 # Make sure app is importable
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from app.database import Base
-from app.config import settings
+from app.database import Base, ASYNC_DATABASE_URL
 
 # Import all models so Alembic can detect them
 import app.models  # noqa: F401
@@ -19,7 +18,8 @@ import app.models  # noqa: F401
 config = context.config
 
 # Override sqlalchemy.url from settings (reads from .env)
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# configparser treats % as interpolation; URL-encoded passwords contain it.
+config.set_main_option("sqlalchemy.url", ASYNC_DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

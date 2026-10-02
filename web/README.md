@@ -128,7 +128,7 @@ web/
 │   │   └── ui/             # Button, Badge, Card, EmptyState, LoadingSpinner
 │   ├── lib/
 │   │   ├── apiClient.ts    # axios instance that attaches the access token (refreshed automatically)
-│   │   ├── cognitoClient.ts
+│   │   ├── authClient.ts
 │   │   └── colors.ts       # design tokens (never hard-code hex values)
 │   ├── types/
 │   │   └── index.ts        # all TypeScript interfaces
@@ -147,5 +147,5 @@ web/
 ## Notes
 
 - `.env` is git-ignored. Never commit real credentials.
-- The `id_token` (not `access_token`) is sent as `Authorization: Bearer` on every API request — the backend validates `aud` against the Cognito client ID.
-- CORS is open (`allow_origins=["*"]`) in dev. Tighten this to your portal's origin before going to production.
+- The short-lived access token is sent as `Authorization: Bearer` on every API request and refreshed quietly with the refresh token. Both live in `localStorage`, as is usual for a single-page app, so keep the site free of untrusted scripts.
+- The backend only accepts browser calls from the origin in its `CORS_ORIGINS` setting (set to this site's address in production).

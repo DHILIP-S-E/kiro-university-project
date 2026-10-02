@@ -14,7 +14,6 @@ class AuthException implements Exception {
 abstract class AuthService {
   Future<AppUser?> getCurrentUser();
   Future<AppUser> signInWithEmail(String email, String password);
-  Future<AppUser> signInWithGoogle();
   Future<AppUser> signUp(String email, String password, String displayName);
   Future<void> signOut();
 }
@@ -36,17 +35,6 @@ class StubAuthService implements AuthService {
       id: 'user_${email.hashCode.abs()}',
       email: email,
       displayName: email.split('@').first,
-    );
-    return _currentUser!;
-  }
-
-  @override
-  Future<AppUser> signInWithGoogle() async {
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = const AppUser(
-      id: 'google_user_001',
-      email: 'user@example.com',
-      displayName: 'Demo User',
     );
     return _currentUser!;
   }

@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_user_id
 from app.database import get_db
 from app.models.capture import Capture
+from app.services.capture_ai import process_text_capture
 from app.services.capture_queue import enqueue_text_capture
 from app.services.s3_service import (
     generate_upload_url,
@@ -128,6 +129,7 @@ async def register_capture(
 @router.post("/note", status_code=status.HTTP_201_CREATED)
 async def create_text_note(
     body: TextNoteRequest,
+    background_tasks: BackgroundTasks,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -146,13 +148,17 @@ async def create_text_note(
     db.add(capture)
     await db.commit()
     await db.refresh(capture)
-    enqueue_text_capture(capture.id)
+    # With the queue pipeline the worker processes it; without one (lean deployment),
+    # or if queueing fails, process it here in the background so it never sticks at 'queued'.
+    if not enqueue_text_capture(capture.id):
+        background_tasks.add_task(process_text_capture, capture.id)
     return capture.to_dict()
 
 
 @router.post("/link", status_code=status.HTTP_201_CREATED)
 async def save_link(
     body: LinkRequest,
+    background_tasks: BackgroundTasks,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -171,7 +177,10 @@ async def save_link(
     db.add(capture)
     await db.commit()
     await db.refresh(capture)
-    enqueue_text_capture(capture.id)
+    # With the queue pipeline the worker processes it; without one (lean deployment),
+    # or if queueing fails, process it here in the background so it never sticks at 'queued'.
+    if not enqueue_text_capture(capture.id):
+        background_tasks.add_task(process_text_capture, capture.id)
     return capture.to_dict()
 
 

@@ -129,9 +129,5 @@ class AppAuthService implements AuthService {
           {'email': email, 'password': password, 'display_name': displayName});
 
   @override
-  Future<AppUser> signInWithGoogle() async => throw const AuthException(
-      'Google sign-in is not available. Use email and password.');
-
-  @override
   Future<void> signOut() => _store.clear();
 }

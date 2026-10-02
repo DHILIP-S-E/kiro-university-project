@@ -8,12 +8,17 @@ ASYNC_DATABASE_URL, SYNC_DATABASE_URL = resolve_urls(
 )
 
 
+# Connection pooling only applies to server databases; SQLite (local dev) has none.
+_pool_args = (
+    {} if ASYNC_DATABASE_URL.startswith("sqlite")
+    else {"pool_size": 10, "max_overflow": 20}
+)
+
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    **_pool_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(

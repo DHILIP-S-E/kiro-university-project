@@ -176,7 +176,12 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
     final text = _pendingShare;
     if (text == null) return;
     _pendingShare = null;
-    _router.push(AppRoutes.eventCreate, extra: text);
+    // Sign-in finishes with go(today), which resets the stack; push only after
+    // that navigation has settled or the event screen would be wiped.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _router.push(AppRoutes.eventCreate, extra: text);
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   @override

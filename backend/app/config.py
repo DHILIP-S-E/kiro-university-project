@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     cognito_user_pool_id: str = ""
     cognito_region: str = "us-east-1"
     cognito_app_client_id: str = ""
+    jwt_secret: str = ""                     # >= 32 chars; enables the app's own email/password login
     allow_insecure_dev_auth: bool = False  # local dev only; never set in production
     scheduler_target_arn: str = ""   # notification-dispatcher Lambda ARN
     scheduler_role_arn: str = ""     # role EventBridge Scheduler assumes

@@ -8,11 +8,4 @@ class AppConfig {
     // Physical device on same network: use 'http://192.168.x.x:8000'
     // Production: 'https://api.your-domain.com'
   );
-
-  /// Cognito user pool settings — values come from the infra stack outputs:
-  /// flutter run --dart-define=COGNITO_CLIENT_ID=... --dart-define=COGNITO_REGION=...
-  static const cognitoRegion =
-      String.fromEnvironment('COGNITO_REGION', defaultValue: 'us-east-1');
-  static const cognitoClientId =
-      String.fromEnvironment('COGNITO_CLIENT_ID', defaultValue: '');
 }

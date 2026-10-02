@@ -18,6 +18,7 @@ import boto3
 import psycopg2
 
 from app.db_url import sync_database_url
+from app.services.conditions import should_fire
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -50,6 +51,15 @@ def _record(conn, reminder_id, user_id, status, fire_at, message_id=None, error=
     conn.commit()
 
 
+def _dependency_status(conn, depends_on_id, user_id):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT status FROM reminders WHERE id=%s AND user_id=%s", (depends_on_id, user_id)
+        )
+        row = cur.fetchone()
+    return row[0] if row else None
+
+
 def handler(event, _context):
     global _sns
     _sns = _sns or boto3.client("sns")
@@ -58,6 +68,11 @@ def handler(event, _context):
     conn = psycopg2.connect(sync_database_url())
     try:
         _record(conn, reminder_id, user_id, "triggered", fire_at)
+        depends_on = event.get("depends_on_id")
+        if depends_on and not should_fire(_dependency_status(conn, depends_on, user_id)):
+            logger.info("Condition met, skipping %s", reminder_id)
+            _record(conn, reminder_id, user_id, "cancelled", fire_at)
+            return {"skipped": True}
         if should_suppress(event.get("priority", "medium"), fire_at):
             logger.info("Quiet hours: suppressed push for %s", reminder_id)
             return {"suppressed": True}

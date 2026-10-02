@@ -24,6 +24,8 @@ class Reminder(Base):
     recurrence_rule: Mapped[str | None] = mapped_column(String(500))
     source: Mapped[str] = mapped_column(String(50), default="manual")
     context_id: Mapped[str | None] = mapped_column(String(36))
+    # Conditional reminder: only fires if this other reminder is not completed yet.
+    depends_on_id: Mapped[str | None] = mapped_column(String(36))
     offsets: Mapped[str | None] = mapped_column(Text)  # JSON array of offset strings e.g. ["-3d","-1h"]
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
@@ -49,6 +51,7 @@ class Reminder(Base):
             "recurrence_rule": self.recurrence_rule,
             "source": self.source,
             "context_id": self.context_id,
+            "depends_on_id": self.depends_on_id,
             "offsets": json.loads(self.offsets) if self.offsets else [],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),

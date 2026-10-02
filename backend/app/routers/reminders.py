@@ -40,6 +40,7 @@ class ReminderCreate(BaseModel):
     source: str = "manual"
     context_id: Optional[str] = None
     offsets: Optional[list[str]] = []
+    depends_on_id: Optional[str] = None  # conditional: fire only if this one is not done
 
 
 class ReminderUpdate(BaseModel):
@@ -59,6 +60,8 @@ async def create_reminder(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
+    if body.depends_on_id:
+        await _get_owned(body.depends_on_id, user_id, db)  # 404 if not yours
     now = datetime.utcnow()
     reminder = Reminder(
         id=str(uuid.uuid4()),
@@ -74,6 +77,7 @@ async def create_reminder(
         recurrence_rule=body.recurrence_rule,
         source=body.source,
         context_id=body.context_id,
+        depends_on_id=body.depends_on_id,
         offsets=json.dumps(body.offsets or []),
         created_at=now,
         updated_at=now,
@@ -164,6 +168,7 @@ def _schedule_cloud_layer(reminder: Reminder) -> None:
         scheduling.schedule_reminder(
             reminder.id, reminder.user_id, reminder.title, reminder.priority,
             reminder.scheduled_at, json.loads(reminder.offsets or "[]"),
+            reminder.depends_on_id, reminder.recurrence_rule, reminder.timezone,
         )
     except Exception:
         logger.exception("Cloud scheduling failed for reminder %s", reminder.id)

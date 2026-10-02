@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:personal_memory_os/core/models/capture.dart';
@@ -14,7 +15,46 @@ class CaptureProvider extends ChangeNotifier {
   final Set<String> _handled = {};
   bool _handledLoaded = false;
 
-  CaptureProvider(this._service, {KeyValueStore? store}) : _store = store;
+  /// How often to re-check captures that are still being processed; null = never.
+  final Duration? pollInterval;
+  Timer? _pollTimer;
+
+  CaptureProvider(this._service, {KeyValueStore? store, this.pollInterval})
+      : _store = store;
+
+  /// True while any capture is waiting for or undergoing AI processing.
+  bool get hasInFlight => _captures.any((c) =>
+      c.processingStatus == CaptureProcessingStatus.queued ||
+      c.processingStatus == CaptureProcessingStatus.processing ||
+      c.processingStatus == CaptureProcessingStatus.uploaded);
+
+  /// Poll until nothing is in flight, so "AI ready" appears without a manual
+  /// refresh. Stops by itself; restarted whenever new captures arrive.
+  void _syncPolling() {
+    final interval = pollInterval;
+    if (interval == null || !hasInFlight) {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+      return;
+    }
+    _pollTimer ??= Timer.periodic(interval, (_) => _refreshQuietly());
+  }
+
+  Future<void> _refreshQuietly() async {
+    try {
+      _captures = await _service.fetchCaptures();
+      notifyListeners();
+    } catch (_) {
+      // Transient (offline): keep the current list and try again next tick.
+    }
+    _syncPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   List<Capture> _captures = [];
   bool _isLoading = false;
@@ -64,6 +104,7 @@ class CaptureProvider extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      _syncPolling();
       notifyListeners();
     }
   }
@@ -78,6 +119,7 @@ class CaptureProvider extends ChangeNotifier {
         eventId: eventId,
       );
       _captures.insert(0, capture);
+      _syncPolling();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -99,6 +141,7 @@ class CaptureProvider extends ChangeNotifier {
         eventId: eventId,
       );
       _captures.insert(0, capture);
+      _syncPolling();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -114,6 +157,7 @@ class CaptureProvider extends ChangeNotifier {
     try {
       final capture = await _service.saveTextNote(text: text, eventId: eventId);
       _captures.insert(0, capture);
+      _syncPolling();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -126,6 +170,7 @@ class CaptureProvider extends ChangeNotifier {
     try {
       final capture = await _service.saveLink(url: url, eventId: eventId);
       _captures.insert(0, capture);
+      _syncPolling();
       notifyListeners();
     } catch (e) {
       _error = e.toString();

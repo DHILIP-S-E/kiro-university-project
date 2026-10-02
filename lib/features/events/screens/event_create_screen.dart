@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -53,6 +54,15 @@ class _EventCreateScreenState extends State<EventCreateScreen>
     _organizerController.dispose();
     _pasteController.dispose();
     super.dispose();
+  }
+
+  /// Capture-first: copy an event page anywhere, then paste and extract in one tap.
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text?.trim() ?? '';
+    if (text.isEmpty || !mounted) return;
+    _pasteController.text = text;
+    await _parseText();
   }
 
   Future<void> _parseText() async {
@@ -268,7 +278,7 @@ class _EventCreateScreenState extends State<EventCreateScreen>
               Switch(
                 value: _isVirtual,
                 onChanged: (v) => setState(() => _isVirtual = v),
-                activeColor: AppColors.accent,
+                activeThumbColor: AppColors.accent,
               ),
             ],
           ),
@@ -322,9 +332,9 @@ class _EventCreateScreenState extends State<EventCreateScreen>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.08),
+              color: AppColors.accent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accent.withOpacity(0.2)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -340,7 +350,17 @@ class _EventCreateScreenState extends State<EventCreateScreen>
             ),
           ),
           const SizedBox(height: 16),
-          _label('Paste event information'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _label('Paste event information'),
+              TextButton.icon(
+                onPressed: _isParsing ? null : _pasteFromClipboard,
+                icon: const Icon(Icons.content_paste, size: 16),
+                label: const Text('Paste & extract'),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           TextField(
             controller: _pasteController,

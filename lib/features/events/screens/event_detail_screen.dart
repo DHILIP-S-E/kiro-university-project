@@ -8,6 +8,7 @@ import 'package:personal_memory_os/core/theme/app_theme.dart';
 import 'package:personal_memory_os/core/utils/date_utils.dart';
 import 'package:personal_memory_os/core/router/app_router.dart';
 import 'package:personal_memory_os/features/capture/widgets/action_suggestions_section.dart';
+import 'package:personal_memory_os/features/events/widgets/reminder_plan_section.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
 
 class EventDetailScreen extends StatelessWidget {
@@ -34,6 +35,7 @@ class EventDetailScreen extends StatelessWidget {
         slivers: [
           _buildHeader(context, event),
           _buildDeadlines(event),
+          SliverToBoxAdapter(child: ReminderPlanSection(event: event)),
           SliverToBoxAdapter(child: ActionSuggestionsSection(eventId: event.id)),
           _buildCaptures(context, event),
           _buildMemorySection(context, event),

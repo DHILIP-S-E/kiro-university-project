@@ -11,6 +11,7 @@ from pathlib import Path
 
 import boto3
 from app.config import settings
+from app.services.converse import build_request, extract_text
 from app.services.reminder_parser import detect_ambiguities, normalize_reminder
 
 _bedrock_client = None
@@ -39,34 +40,14 @@ def _render(template: str, **values: str) -> str:
     return template
 
 
-def guardrail_kwargs() -> dict:
-    """Guardrail parameters for invoke_model; empty when no guardrail is configured."""
-    if not (settings.guardrail_id and settings.guardrail_version):
-        return {}
-    return {
-        "guardrailIdentifier": settings.guardrail_id,
-        "guardrailVersion": settings.guardrail_version,
-    }
-
-
-def _invoke_claude(model_id: str, prompt: str, max_tokens: int = 1024) -> str:
-    """Invoke a Bedrock Claude model and return the text response."""
-    client = _get_client()
-    body = json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.1,
-    })
-    response = client.invoke_model(
-        modelId=model_id,
-        body=body,
-        contentType="application/json",
-        accept="application/json",
-        **guardrail_kwargs(),
+def _invoke(model_id: str, prompt: str, max_tokens: int = 1024) -> str:
+    """Call a Bedrock text model through the Converse API and return its text.
+    The model is a setting (BEDROCK_MODEL_FAST / _STRONG); nothing here is model-specific."""
+    request = build_request(
+        model_id, prompt, max_tokens=max_tokens,
+        guardrail_id=settings.guardrail_id, guardrail_version=settings.guardrail_version,
     )
-    result = json.loads(response["body"].read())
-    return result["content"][0]["text"]
+    return extract_text(_get_client().converse(**request))
 
 
 def _extract_json(raw: str) -> dict:
@@ -80,7 +61,7 @@ def _extract_json(raw: str) -> dict:
 def parse_reminder(text: str, timezone: str = "UTC") -> dict:
     """
     Parse natural language into a structured reminder dict.
-    Uses Claude 3 Haiku for speed and cost efficiency.
+    Uses the fast model (BEDROCK_MODEL_FAST) for speed and cost efficiency.
     Returns: {title, type, scheduled_at, priority, offsets}
     """
     template = _load_prompt("parse_reminder")
@@ -90,7 +71,7 @@ def parse_reminder(text: str, timezone: str = "UTC") -> dict:
         timezone=timezone,
         input=text,
     )
-    raw = _invoke_claude(settings.bedrock_model_haiku, prompt, max_tokens=512)
+    raw = _invoke(settings.bedrock_model_fast, prompt, max_tokens=512)
     result = normalize_reminder(_extract_json(raw), fallback_text=text[:100])
     # The user must confirm anything uncertain before a reminder is created.
     result["ambiguities"] = detect_ambiguities(result, text, datetime.utcnow())
@@ -100,7 +81,7 @@ def parse_reminder(text: str, timezone: str = "UTC") -> dict:
 def extract_event(text: str) -> dict:
     """
     Extract event metadata from pasted text / URL / email.
-    Uses Claude 3 Haiku.
+    Uses the fast model (BEDROCK_MODEL_FAST).
     Returns: {title, event_type, start_at, end_at, location, event_url, ...}
     """
     template = _load_prompt("extract_event")
@@ -109,7 +90,7 @@ def extract_event(text: str) -> dict:
         current_date=datetime.utcnow().date().isoformat(),
         text=text,
     )
-    raw = _invoke_claude(settings.bedrock_model_haiku, prompt, max_tokens=512)
+    raw = _invoke(settings.bedrock_model_fast, prompt, max_tokens=512)
     result = _extract_json(raw)
     result.setdefault("title", "Event")
     result.setdefault("event_type", "custom")
@@ -119,7 +100,7 @@ def extract_event(text: str) -> dict:
 
 def answer_memory_question(question: str, docs: list) -> dict:
     """
-    RAG-style memory Q&A using Claude 3 Sonnet.
+    RAG-style memory Q&A using the strong model (BEDROCK_MODEL_STRONG).
     Builds context from MemoryDocument rows, calls Bedrock, returns grounded answer.
 
     Args:
@@ -158,8 +139,8 @@ def answer_memory_question(question: str, docs: list) -> dict:
     prompt = _render(template, context=context, question=question)
 
     try:
-        raw = _invoke_claude(
-            settings.bedrock_model_sonnet, prompt, max_tokens=1024
+        raw = _invoke(
+            settings.bedrock_model_strong, prompt, max_tokens=1024
         )
         result = _extract_json(raw)
         result.setdefault("answer", "I couldn't find a clear answer in your memory.")
@@ -175,7 +156,7 @@ def answer_memory_question(question: str, docs: list) -> dict:
 def summarize_event(event_title: str, event_date: str, captures_text: str) -> dict:
     """
     Generate a structured event summary from capture content.
-    Uses Claude 3 Sonnet for quality summarization.
+    Uses the strong model (BEDROCK_MODEL_STRONG) for quality summarization.
 
     Args:
         event_title: name of the event
@@ -205,8 +186,8 @@ def summarize_event(event_title: str, event_date: str, captures_text: str) -> di
         captures_text=captures_text[:8000],  # truncate to stay within token budget
     )
     try:
-        raw = _invoke_claude(
-            settings.bedrock_model_sonnet, prompt, max_tokens=2048
+        raw = _invoke(
+            settings.bedrock_model_strong, prompt, max_tokens=2048
         )
         result = _extract_json(raw)
         # Ensure all expected keys present

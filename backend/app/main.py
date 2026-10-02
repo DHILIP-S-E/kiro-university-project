@@ -26,10 +26,12 @@ app = FastAPI(
     description="AWS-native personal reminder and memory platform",
 )
 
+# Auth is a Bearer header (no cookies), so credentials are not needed; that also makes
+# a specific origin list safe. Set CORS_ORIGINS to the web app's address in production.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tighten to specific origins in production
-    allow_credentials=True,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

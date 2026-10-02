@@ -22,7 +22,7 @@ dependencies:
   camera: ^0.10.5+9
 
   # Audio recording
-  record: ^5.1.1
+  record: 6.0.0
 
   # Unique IDs
   uuid: ^4.4.0
@@ -56,7 +56,6 @@ dependencies:
 
   # Path provider (local file paths)
   path_provider: ^2.1.4
-  receive_sharing_intent: ^1.9.0
 
 dev_dependencies:
   flutter_test:

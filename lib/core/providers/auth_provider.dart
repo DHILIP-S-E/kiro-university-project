@@ -20,7 +20,11 @@ class AppUser {
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
 
-  AuthProvider(this._authService);
+  /// How long to wait for the stored session before showing the login screen.
+  final Duration sessionCheckTimeout;
+
+  AuthProvider(this._authService,
+      {this.sessionCheckTimeout = const Duration(seconds: 8)});
 
   AuthStatus _status = AuthStatus.unknown;
   AppUser? _user;
@@ -32,7 +36,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> checkAuthState() async {
     try {
-      final user = await _authService.getCurrentUser();
+      // A stuck session lookup (e.g. secure storage) must never leave the app on a
+      // loading screen forever: after the limit, treat it as signed out.
+      final user = await _authService.getCurrentUser().timeout(sessionCheckTimeout);
       if (user != null) {
         _user = user;
         _status = AuthStatus.authenticated;

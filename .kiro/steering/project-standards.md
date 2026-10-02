@@ -11,7 +11,7 @@ The project is structured feature-first under `lib/features/`.
 - **Backend:** AWS Lambda (domain functions)
 - **Database:** Amazon Aurora PostgreSQL-Compatible
 - **Storage:** Amazon S3 (private, KMS-encrypted)
-- **AI:** Amazon Bedrock (Claude/Titan via Lambda — never called directly from Flutter)
+- **AI:** Amazon Bedrock (Nova/Titan via the backend — never called directly from Flutter)
 - **Scheduling:** Amazon EventBridge Scheduler + local device notifications
 - **Notifications:** Amazon SNS → APNs/FCM
 - **Search/RAG:** Bedrock Knowledge Bases + OpenSearch Serverless

@@ -206,3 +206,27 @@ def test_callers_get_the_guardrail_and_permission(templates):
         t.has_resource_properties("AWS::IAM::Policy", {"PolicyDocument": {"Statement": Match.array_with([
             Match.object_like({"Action": "bedrock:ApplyGuardrail"}),
         ])}})
+
+
+def test_no_claude_or_anthropic_model_anywhere(templates):
+    import json
+    for name, t in templates.items():
+        blob = json.dumps(t.to_json()).lower()
+        assert "anthropic" not in blob and "claude" not in blob, name
+
+
+def test_bedrock_calls_are_allowed_only_on_the_named_inference_profiles(templates):
+    import json
+
+    resources = set()
+    for pol in templates["Api"].find_resources("AWS::IAM::Policy").values():
+        for st in pol["Properties"]["PolicyDocument"]["Statement"]:
+            actions = st["Action"] if isinstance(st["Action"], list) else [st["Action"]]
+            if "bedrock:InvokeModel" in actions:
+                res = st["Resource"] if isinstance(st["Resource"], list) else [st["Resource"]]
+                resources.update(json.dumps(r) for r in res)
+    joined = " ".join(resources)
+    assert "inference-profile/apac.amazon.nova-lite-v1:0" in joined
+    assert "inference-profile/apac.amazon.nova-pro-v1:0" in joined
+    assert "foundation-model/amazon.nova-lite-v1:0" in joined
+    assert '"*"' not in resources, "never a wildcard over all of Bedrock"

@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:personal_memory_os/core/services/app_auth_service.dart';
-import 'package:personal_memory_os/core/services/cognito_auth_service.dart';
+import 'package:personal_memory_os/core/services/auth_service.dart';
+import 'package:personal_memory_os/core/services/token_store.dart';
 
 String jwtExpiring(DateTime at) {
   String b64(Object o) => base64Url.encode(utf8.encode(jsonEncode(o))).replaceAll('=', '');
@@ -83,7 +84,6 @@ void main() {
     final user = await auth.signUp('ada@example.com', 'correct horse', 'Ada');
     expect(calls.single.url.path, '/auth/register');
     expect(user.email, 'ada@example.com');
-    await auth.confirmSignUp('x', 'y'); // harmless no-op
   });
 
   test('stays signed in across restarts, even offline', () async {

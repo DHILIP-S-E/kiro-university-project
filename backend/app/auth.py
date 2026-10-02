@@ -1,5 +1,5 @@
 """
-Cognito JWT authentication middleware.
+JWT authentication middleware: the app's own login tokens (JWT_SECRET) or Cognito.
 
 Downloads the JWKS from the Cognito User Pool endpoint and verifies every
 incoming Bearer token (signature, expiry, issuer, token_use, app client).
@@ -15,6 +15,7 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import settings
+from app.services.tokens import TokenError, verify_token
 
 security = HTTPBearer(auto_error=True)
 
@@ -75,6 +76,13 @@ async def get_current_user_id(
         detail="Invalid or expired authentication token",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # The app's own email/password login takes precedence when configured.
+    if settings.jwt_secret:
+        try:
+            return verify_token(token, "access", settings.jwt_secret)
+        except TokenError:
+            raise unauthorized
 
     if not settings.cognito_user_pool_id:
         if settings.allow_insecure_dev_auth:

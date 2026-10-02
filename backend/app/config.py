@@ -9,8 +9,10 @@ class Settings(BaseSettings):
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     s3_bucket: str = "personal-memory-os-captures"
-    bedrock_model_haiku: str = "anthropic.claude-3-haiku-20240307-v1:0"
-    bedrock_model_sonnet: str = "anthropic.claude-3-sonnet-20240229-v1:0"
+    # Amazon Nova via the apac inference profile (Mumbai). Any Converse-capable
+    # model works: change these settings, not code.
+    bedrock_model_fast: str = "apac.amazon.nova-lite-v1:0"     # parsing, extraction, quick summaries
+    bedrock_model_strong: str = "apac.amazon.nova-pro-v1:0"    # event summaries, memory Q&A
     bedrock_embedding_model: str = "amazon.titan-embed-text-v2:0"
     cognito_user_pool_id: str = ""
     cognito_region: str = "us-east-1"

@@ -128,7 +128,13 @@ class ReminderProvider extends ChangeNotifier {
       _reminders.add(created);
       // Schedule device-side local notification (layer 2 of two-layer alarm)
       if (created.alarmEnabled) {
-        await NotificationService.scheduleReminder(created);
+        try {
+          await NotificationService.scheduleReminder(created);
+        } catch (e) {
+          // The reminder exists (and the cloud layer will still fire it); a failed
+          // local alarm must not make creation look failed and invite a duplicate.
+          _error = 'Reminder saved, but the device alarm could not be set: $e';
+        }
       }
       notifyListeners();
     } catch (e) {

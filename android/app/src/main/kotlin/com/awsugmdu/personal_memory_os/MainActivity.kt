@@ -17,6 +17,15 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         initialText = sharedText(intent)
+        // Home-screen widget content from Dart.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WIDGET_CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "update" && call.arguments is String) {
+                PmosWidgetProvider.store(applicationContext, call.arguments as String)
+                result.success(null)
+            } else {
+                result.notImplemented()
+            }
+        }
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).also {
             it.setMethodCallHandler { call, result ->
                 if (call.method == "getInitialText") {
@@ -44,5 +53,6 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL = "pmos/share"
+        private const val WIDGET_CHANNEL = "pmos/widget"
     }
 }

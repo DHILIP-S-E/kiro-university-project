@@ -178,8 +178,9 @@ class _EventCreateScreenState extends State<EventCreateScreen>
     );
 
     try {
-      await context.read<EventProvider>().createEvent(event);
-      if (mounted) context.pop();
+      final created = await context.read<EventProvider>().createEvent(event);
+      // Open the new event: its reminder plan is offered there.
+      if (mounted) context.pushReplacement('/events/${created.id}');
     } catch (e) {
       _showError(e.toString());
     }

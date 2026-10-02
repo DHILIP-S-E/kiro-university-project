@@ -31,10 +31,10 @@ class NowCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withOpacity(0.4)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withOpacity(0.12),
+            color: AppColors.accent.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -48,7 +48,7 @@ class NowCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.2),
+                  color: AppColors.accent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -101,7 +101,7 @@ class NowCard extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: onSnooze,
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.accent.withOpacity(0.4)),
+                    side: BorderSide(color: AppColors.accent.withValues(alpha: 0.4)),
                     foregroundColor: AppColors.textSecondary,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),

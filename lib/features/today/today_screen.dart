@@ -12,6 +12,8 @@ import 'package:personal_memory_os/shared/widgets/reminder_card.dart';
 import 'package:personal_memory_os/shared/widgets/event_card.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
 import 'package:personal_memory_os/shared/widgets/section_header.dart';
+import 'package:personal_memory_os/core/utils/daily_brief.dart';
+import 'package:personal_memory_os/features/today/widgets/daily_brief_card.dart';
 import 'package:personal_memory_os/features/today/widgets/now_card.dart';
 import 'package:personal_memory_os/features/today/widgets/quick_capture_bar.dart';
 
@@ -49,6 +51,7 @@ class _TodayScreenState extends State<TodayScreen> {
           child: CustomScrollView(
             slivers: [
               _buildHeader(context),
+              _buildBrief(context),
               _buildNowSection(context),
               _buildTodayReminders(context),
               _buildTodayEvents(context),
@@ -60,6 +63,20 @@ class _TodayScreenState extends State<TodayScreen> {
         ),
       ),
       floatingActionButton: _buildFab(context),
+    );
+  }
+
+  Widget _buildBrief(BuildContext context) {
+    final brief = buildBrief(
+      reminders: context.watch<ReminderProvider>().reminders,
+      events: context.watch<EventProvider>().events,
+      now: DateTime.now(),
+    );
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+        child: DailyBriefCard(brief: brief),
+      ),
     );
   }
 

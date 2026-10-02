@@ -1,10 +1,26 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import get_current_user_id
+from app.config import settings
 from app.routers import reminders, events, captures, memory, ai, account, devices, auth
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if settings.auto_create_tables:
+        # Local development only. Production schemas come from `alembic upgrade head`.
+        import app.models  # noqa: F401  (register every table)
+        from app.database import Base, engine
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Personal Memory OS API",
     version="1.0.0",
     description="AWS-native personal reminder and memory platform",

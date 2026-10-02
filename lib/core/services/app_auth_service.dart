@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:personal_memory_os/core/config.dart';
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
 import 'package:personal_memory_os/core/services/auth_service.dart';
-import 'package:personal_memory_os/core/services/cognito_auth_service.dart'
-    show AuthException, SecureTokenStore, TokenStore;
+import 'package:personal_memory_os/core/services/token_store.dart';
 
 /// Email/password login against the app's own backend (/auth/*), no Cognito.
 ///
@@ -128,10 +127,6 @@ class AppAuthService implements AuthService {
   Future<AppUser> signUp(String email, String password, String displayName) =>
       _authenticate('/auth/register',
           {'email': email, 'password': password, 'display_name': displayName});
-
-  /// No email verification step with the app's own login.
-  @override
-  Future<void> confirmSignUp(String email, String code) async {}
 
   @override
   Future<AppUser> signInWithGoogle() async => throw const AuthException(

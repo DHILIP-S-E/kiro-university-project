@@ -31,7 +31,10 @@ class Settings(BaseSettings):
     guardrail_version: str = ""
     sns_platform_app_arn: str = ""           # FCM/APNs platform application
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8",
+        extra="ignore",  # a stale or unrelated key in .env must not stop the server
+    )
 
 
 @lru_cache()

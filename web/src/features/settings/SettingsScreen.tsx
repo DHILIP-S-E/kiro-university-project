@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../lib/apiClient';
 import { useAuth } from '../auth/AuthContext';
-import { getCurrentUser } from '../../lib/cognitoClient';
-import { CognitoUserSession } from 'amazon-cognito-identity-js';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -11,21 +9,6 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
-
-function getUserEmail(): Promise<string | null> {
-  return new Promise(resolve => {
-    const user = getCurrentUser();
-    if (!user) { resolve(null); return; }
-    user.getSession((err: Error | null, session: CognitoUserSession | null) => {
-      if (err || !session) { resolve(null); return; }
-      user.getUserAttributes((attrErr, attrs) => {
-        if (attrErr || !attrs) { resolve(null); return; }
-        const emailAttr = attrs.find(a => a.getName() === 'email');
-        resolve(emailAttr ? emailAttr.getValue() : null);
-      });
-    });
-  });
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Delete confirmation dialog
@@ -96,16 +79,11 @@ function DeleteDialog({ onCancel, onConfirm }: DeleteDialogProps) {
 // ──────────────────────────────────────────────────────────────────────────────
 export default function SettingsScreen() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
-
-  const [email, setEmail] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
+  const email = user?.email ?? null;
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  useEffect(() => {
-    getUserEmail().then(setEmail);
-  }, []);
 
   // ── Export ──────────────────────────────────────────────────────────────────
   async function handleExport() {
@@ -156,7 +134,7 @@ export default function SettingsScreen() {
             <p className="text-textPrimary text-sm font-medium">
               {email ?? 'Loading…'}
             </p>
-            <p className="text-textMuted text-xs">Signed in via Amazon Cognito</p>
+            <p className="text-textMuted text-xs">Signed in with your Personal Memory OS account</p>
           </div>
         </div>
       </Card>

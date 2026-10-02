@@ -5,7 +5,7 @@ FastAPI + PostgreSQL + Amazon Bedrock backend for the Personal Memory OS Flutter
 ```
 Flutter App  →  FastAPI (this)  →  PostgreSQL (cloud)
                                →  Amazon S3 (media storage)
-                               →  Amazon Bedrock (Claude 3 / Titan)
+                               →  Amazon Bedrock (Amazon Nova / Titan)
 ```
 
 ---
@@ -15,7 +15,7 @@ Flutter App  →  FastAPI (this)  →  PostgreSQL (cloud)
 - Python 3.11+
 - Cloud PostgreSQL (Neon, Supabase, AWS RDS, etc.)
 - AWS account with:
-  - Bedrock model access enabled (Claude 3 Haiku + Sonnet, Titan Embeddings)
+  - Bedrock access to a text model (Amazon Nova works with no form) and Titan Embeddings
   - S3 bucket created (private)
   - IAM user or role with Bedrock + S3 permissions
 
@@ -53,8 +53,8 @@ cp .env.example .env
 | `AWS_ACCESS_KEY_ID` | AWS access key (or use IAM role) |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key (or use IAM role) |
 | `S3_BUCKET` | Private S3 bucket name for media |
-| `BEDROCK_MODEL_HAIKU` | Claude 3 Haiku model ID |
-| `BEDROCK_MODEL_SONNET` | Claude 3 Sonnet model ID |
+| `BEDROCK_MODEL_FAST` | Quick/cheap text model (default `apac.amazon.nova-lite-v1:0`) |
+| `BEDROCK_MODEL_STRONG` | Stronger text model (default `apac.amazon.nova-pro-v1:0`) |
 | `BEDROCK_EMBEDDING_MODEL` | Titan Embeddings model ID |
 | `COGNITO_USER_POOL_ID` | Cognito User Pool ID |
 | `COGNITO_REGION` | Cognito region |
@@ -110,7 +110,7 @@ API is available at:
 | `PATCH` | `/events/{id}` | Update event |
 | `DELETE` | `/events/{id}` | Delete event (cascades deadlines) |
 | `POST` | `/events/{id}/deadlines` | Add deadline |
-| `POST` | `/events/{id}/generate-summary` | Generate AI summary (Bedrock Sonnet) |
+| `POST` | `/events/{id}/generate-summary` | Generate AI summary (strong model) |
 | `GET` | `/events/{id}/summary` | Get existing summary |
 
 ### Captures
@@ -130,14 +130,14 @@ API is available at:
 |---|---|---|
 | `GET` | `/memory` | List memory documents |
 | `GET` | `/memory/search?q=` | Keyword search |
-| `POST` | `/memory/ask` | RAG Q&A (Bedrock Sonnet + grounded citations) |
+| `POST` | `/memory/ask` | RAG Q&A (strong model + grounded citations) |
 | `GET` | `/memory/{id}` | Single memory document |
 
 ### AI
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/ai/parse-reminder` | NLP → structured reminder (Bedrock Haiku) |
-| `POST` | `/ai/extract-event` | Text → structured event (Bedrock Haiku) |
+| `POST` | `/ai/parse-reminder` | NLP → structured reminder (fast model) |
+| `POST` | `/ai/extract-event` | Text → structured event (fast model) |
 
 ### Account, devices and event policy
 | Method | Path | Description |
@@ -191,4 +191,4 @@ flutter run --dart-define=USE_REAL_BACKEND=true --dart-define=BACKEND_URL=http:/
   - LLM never executes scheduling — FastAPI + EventBridge Scheduler does
 - **Auth fails closed:** if Cognito is not configured every request is refused (503). For local
   development only, set `ALLOW_INSECURE_DEV_AUTH=true` to accept unverified tokens.
-- **Guardrails:** set `GUARDRAIL_ID` / `GUARDRAIL_VERSION` to apply a Bedrock Guardrail to every Claude call.
+- **Guardrails:** set `GUARDRAIL_ID` / `GUARDRAIL_VERSION` to apply a Bedrock Guardrail to every model call.

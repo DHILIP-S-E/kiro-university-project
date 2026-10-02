@@ -13,6 +13,7 @@ import 'package:personal_memory_os/shared/widgets/event_card.dart';
 import 'package:personal_memory_os/shared/widgets/capture_card.dart';
 import 'package:personal_memory_os/shared/widgets/section_header.dart';
 import 'package:personal_memory_os/core/utils/daily_brief.dart';
+import 'package:personal_memory_os/features/capture/widgets/action_suggestions_section.dart';
 import 'package:personal_memory_os/features/today/widgets/daily_brief_card.dart';
 import 'package:personal_memory_os/features/today/widgets/now_card.dart';
 import 'package:personal_memory_os/features/today/widgets/quick_capture_bar.dart';
@@ -52,6 +53,7 @@ class _TodayScreenState extends State<TodayScreen> {
             slivers: [
               _buildHeader(context),
               _buildBrief(context),
+              const SliverToBoxAdapter(child: ActionSuggestionsSection()),
               _buildNowSection(context),
               _buildTodayReminders(context),
               _buildTodayEvents(context),

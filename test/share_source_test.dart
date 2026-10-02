@@ -1,45 +1,69 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:personal_memory_os/core/services/share_source.dart';
 
-SharedMediaFile item(String path, SharedMediaType type) =>
-    SharedMediaFile(path: path, type: type);
+const channel = MethodChannel('pmos/share');
 
 void main() {
-  test('shared text is returned trimmed', () {
-    expect(sharedTextFrom([item('  AWS Hackathon Oct 4  ', SharedMediaType.text)]),
-        'AWS Hackathon Oct 4');
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
-  test('text and url items are joined, in order', () {
-    expect(
-      sharedTextFrom([
-        item('Register by Oct 1', SharedMediaType.text),
-        item('https://example.com/hack', SharedMediaType.url),
-      ]),
-      'Register by Oct 1\nhttps://example.com/hack',
-    );
+  test('cleanSharedText trims and rejects blanks and non-strings', () {
+    expect(cleanSharedText('  AWS Hackathon Oct 4  '), 'AWS Hackathon Oct 4');
+    expect(cleanSharedText('   '), isNull);
+    expect(cleanSharedText(null), isNull);
+    expect(cleanSharedText(42), isNull);
   });
 
-  test('images, files and blank text are ignored', () {
-    expect(sharedTextFrom([item('/tmp/a.jpg', SharedMediaType.image)]), isNull);
-    expect(sharedTextFrom([item('/tmp/a.pdf', SharedMediaType.file)]), isNull);
-    expect(sharedTextFrom([item('   ', SharedMediaType.text)]), isNull);
-    expect(sharedTextFrom([]), isNull);
+  test('cold start: initial text comes from the native side', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'getInitialText');
+      return '  Register by Oct 1\nhttps://example.com ';
+    });
+    expect(await ChannelShareSource().initialText(),
+        'Register by Oct 1\nhttps://example.com');
   });
 
-  test('a mix keeps only the text', () {
-    expect(
-      sharedTextFrom([
-        item('/tmp/a.jpg', SharedMediaType.image),
-        item('Workshop Oct 12', SharedMediaType.text),
-      ]),
-      'Workshop Oct 12',
-    );
+  test('cold start without a share returns null', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async => null);
+    expect(await ChannelShareSource().initialText(), isNull);
+  });
+
+  test('no native side (not Android): nothing shared, no crash', () async {
+    expect(await ChannelShareSource().initialText(), isNull);
+  });
+
+  test('shares while running arrive on the stream', () async {
+    final source = ChannelShareSource();
+    final received = <String>[];
+    final sub = source.texts.listen(received.add);
+
+    Future<void> nativePush(Object? text) =>
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+          'pmos/share',
+          const StandardMethodCodec().encodeMethodCall(MethodCall('onShare', text)),
+          (_) {},
+        );
+
+    await nativePush('Gemini Workshop Oct 12');
+    await nativePush('   ');
+    await nativePush(null);
+    await nativePush('Second share');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(received, ['Gemini Workshop Oct 12', 'Second share']);
+    await sub.cancel();
   });
 
   test('NoShareSource shares nothing', () async {
-    expect(await NoShareSource().initialText(), isNull);
-    expect(await NoShareSource().texts.isEmpty, isTrue);
+    expect(await const NoShareSource().initialText(), isNull);
+    expect(await const NoShareSource().texts.isEmpty, isTrue);
   });
 }

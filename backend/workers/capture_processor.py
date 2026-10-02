@@ -19,11 +19,13 @@ import json
 import logging
 import os
 import re
+from datetime import datetime, timezone
 
 import boto3
 import psycopg2
 
 from app.db_url import sync_database_url
+from app.services.action_items import normalize_actions
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -103,9 +105,14 @@ def _guardrail_kwargs() -> dict:
 
 
 def summarise(text: str) -> dict:
+    today = datetime.now(timezone.utc).date().isoformat()
     prompt = (
         "Summarise this captured content. Return ONLY JSON: "
-        '{"summary": str, "topics": [str], "key_points": [str], "actions": [str]}\n\n'
+        '{"summary": str, "topics": [str], "key_points": [str], '
+        '"actions": [{"title": str, "due_at": "YYYY-MM-DD or null"}]}\n'
+        "actions are things the speaker says they must do in the future. "
+        f"Today is {today}; resolve relative or partial dates against it, "
+        "and use null when no date is stated. Never invent a date.\n\n"
         + text[:8000]
     )
     resp = boto3.client("bedrock-runtime").invoke_model(
@@ -171,7 +178,7 @@ def _store_result(conn, capture_id: str, text: str, transcript: bool) -> None:
                 result.get("summary", ""),
                 json.dumps(result.get("topics", [])),
                 json.dumps(result.get("key_points", [])),
-                json.dumps(result.get("actions", [])),
+                json.dumps(normalize_actions(result.get("actions"))),
                 text if transcript else None,
                 capture_id,
             ),

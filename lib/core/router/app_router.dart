@@ -101,7 +101,8 @@ GoRouter createAppRouter(AuthProvider auth) => GoRouter(
     GoRoute(
       path: AppRoutes.eventCreate,
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const EventCreateScreen(),
+      builder: (context, state) =>
+          EventCreateScreen(initialText: state.extra is String ? state.extra as String : null),
     ),
     GoRoute(
       path: '/events/:id',

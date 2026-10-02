@@ -139,6 +139,27 @@ API is available at:
 | `POST` | `/ai/parse-reminder` | NLP → structured reminder (Bedrock Haiku) |
 | `POST` | `/ai/extract-event` | Text → structured event (Bedrock Haiku) |
 
+### Account, devices and event policy
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/account/export` | All of the user's data as JSON |
+| `DELETE` | `/account` | Delete everything: DB rows, S3 media, schedules, KB documents |
+| `POST` | `/devices` | Register an FCM/APNs token for cloud push |
+| `GET` | `/events/{id}/reminder-policy` | Preview the smart reminder plan for an event |
+| `POST` | `/events/{id}/reminder-policy` | Create the confirmed reminders |
+
+---
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Property-based tests (hypothesis) cover reminder parsing, fire-time scheduling,
+quiet hours, event policy and conditional reminders.
+
 ---
 
 ## Connect Flutter to Backend
@@ -168,3 +189,6 @@ flutter run --dart-define=USE_REAL_BACKEND=true --dart-define=BACKEND_URL=http:/
   - AI suggests, user confirms — no silent reminder/event creation from AI output
   - Every memory answer grounded in stored captures (source citations required)
   - LLM never executes scheduling — FastAPI + EventBridge Scheduler does
+- **Auth fails closed:** if Cognito is not configured every request is refused (503). For local
+  development only, set `ALLOW_INSECURE_DEV_AUTH=true` to accept unverified tokens.
+- **Guardrails:** set `GUARDRAIL_ID` / `GUARDRAIL_VERSION` to apply a Bedrock Guardrail to every Claude call.

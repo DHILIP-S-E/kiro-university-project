@@ -24,7 +24,7 @@ A mobile app combining a smart reminder engine with a personal memory system.
 
 - Flutter SDK ≥ 3.16
 - Dart SDK ≥ 3.2
-- AWS account with Amplify CLI configured
+- AWS account, AWS CDK v2 and Docker (for deploying `infra/`)
 - Amazon Bedrock model access enabled (Claude 3, Titan)
 
 ### Install dependencies
@@ -41,16 +41,17 @@ flutter run
 
 The app boots in stub mode with seeded demo data. All services have `Stub*` implementations that return realistic mock data without needing a live AWS backend.
 
-### Configure AWS backend
+### Configure the AWS backend
 
-1. Install Amplify CLI: `npm install -g @aws-amplify/cli`
-2. Initialize: `amplify init`
-3. Add auth: `amplify add auth` (Cognito User Pools + Google OAuth)
-4. Add API: `amplify add api` (AppSync GraphQL)
-5. Add storage: `amplify add storage` (S3 private)
-6. Push: `amplify push`
-7. Update `lib/aws/amplify_config.dart` with the generated values
-8. Swap `Stub*Service` classes in `lib/main.dart` for real `Amplify*Service` implementations
+1. Deploy the infrastructure: `cd infra && pip install -r requirements.txt && cdk deploy --all` (needs Docker)
+2. Create the SNS platform application for FCM/APNs and pass its ARN: `cdk deploy --all -c sns_platform_app_arn=<arn>`
+3. Run the app against it:
+
+```bash
+flutter run --dart-define=USE_REAL_BACKEND=true   --dart-define=BACKEND_URL=<ApiUrl output>   --dart-define=COGNITO_CLIENT_ID=<AppClientId output>   --dart-define=COGNITO_REGION=<region>
+```
+
+Local backend development: see `backend/README.md`.
 
 ---
 
@@ -113,13 +114,13 @@ lib/
     section_header.dart
     status_chip.dart
     empty_state.dart
-  aws/amplify_config.dart           ← Amplify configuration (replace placeholders)
+  core/sync/                        ← offline queue, offline-first services, connectivity coordinator
 
-infra/                              ← AWS CDK stacks (to be implemented)
-  auth/       api/       database/
-  storage/    queues/    scheduler/
-  notifications/   ai/   search/
-  monitoring/ security/
+infra/                              ← AWS CDK (Python) — 11 stacks, see infra/app.py
+  stacks/  security  auth  storage  database  notifications  ai
+           search    queues  scheduler  api    monitoring
+  tests/   synth + security-invariant tests
+backend/                            ← FastAPI on Lambda + worker Lambdas (dispatcher, capture processor)
 
 .kiro/
   steering/
@@ -140,12 +141,12 @@ infra/                              ← AWS CDK stacks (to be implemented)
 ## Architecture
 
 ```
-Flutter App (AWS Amplify)
+Flutter App
         │ Cognito JWT
         ▼
-  AWS AppSync (GraphQL)
+  API Gateway + WAF (REST)
         │
-   AWS Lambda
+   AWS Lambda (FastAPI)
    ┌────┴──────────────────────────────────┐
    │            │            │             │
    ▼            ▼            ▼             ▼
@@ -211,9 +212,8 @@ S3 upload → EventBridge → SQS → Lambda → Bedrock Data Automation
 
 | Service | Purpose |
 |---|---|
-| AWS Amplify | Mobile integration, CI/CD |
 | Amazon Cognito | Auth (email + Google OAuth) |
-| AWS AppSync | GraphQL API + real-time subscriptions |
+| Amazon API Gateway | REST API in front of the FastAPI Lambda |
 | AWS Lambda | All backend compute (domain functions) |
 | Amazon Aurora PostgreSQL | Source-of-truth relational database |
 | Amazon S3 | Private media storage (KMS-encrypted) |

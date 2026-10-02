@@ -134,11 +134,22 @@ Aurora PostgreSQL          Amazon S3           EventBridge        Amazon SQS
 - [x] Settings screen — profile, notifications, AI, storage, privacy, account
 - [x] Auth screen — email/password + Google (Cognito)
 - [x] Service layer — abstract interfaces + stub implementations for all domains
-- [x] AWS Amplify config stub (amplify_config.dart)
+- [x] AWS Amplify config stub (amplify_config.dart) — superseded by Cognito + FastAPI
 - [x] pubspec.yaml with all dependencies pinned
 - [x] Steering documents (project-standards, aws-architecture, flutter-patterns)
-- [ ] AWS CDK infrastructure stacks (infra/)
-- [ ] Real Amplify service implementations (swap stubs)
-- [ ] Local notification scheduling (flutter_local_notifications integration)
-- [ ] Offline sync queue implementation
-- [ ] Property-based tests for reminder parsing
+- [x] AWS CDK infrastructure stacks (infra/) — 11 stacks, synth-tested
+- [x] Real service implementations (FastAPI + Cognito API clients replace stubs)
+- [x] Local notification scheduling (flutter_local_notifications integration)
+- [x] Offline sync queue implementation (R6)
+- [x] Property-based tests for reminder parsing (backend, hypothesis)
+- [x] Cloud reminder scheduling: EventBridge Scheduler -> dispatcher Lambda -> SNS (R1.5, R7)
+- [x] Capture pipeline: S3 -> EventBridge -> SQS -> processor (BDA / Transcribe / Claude) (R3)
+- [x] Knowledge Base sync + semantic retrieval with per-user filter (R4.2, R4.3)
+- [x] Account export and delete-all (R5.7, R5.8)
+- [x] Push token registration plumbing (PushRegistration + POST /devices); [ ] plug in firebase_messaging (needs a Firebase project)
+- [ ] Google sign-in via Cognito Hosted UI
+- [x] Bedrock Guardrails on model invocations (CDK guardrail + applied in API and worker)
+- [x] Clipboard capture for events (paste & extract); [ ] share-sheet and home-screen widgets (native code)
+- [x] Daily brief (Today screen) and user review step for ambiguous AI-parsed dates
+- [x] Conditional ("if not done by Friday") reminders
+- [ ] Deploy and verify the CDK stacks against a real AWS account

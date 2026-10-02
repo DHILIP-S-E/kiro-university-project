@@ -15,6 +15,7 @@ import 'package:personal_memory_os/core/providers/auth_provider.dart';
 import 'package:personal_memory_os/shell.dart';
 
 class AppRoutes {
+  static const splash = '/splash';
   static const auth = '/auth';
   static const shell = '/';
   static const today = '/today';
@@ -36,22 +37,30 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 /// Pure so it can be unit-tested without a widget tree.
 String? authRedirect(AuthStatus status, String location) {
   final onAuth = location == AppRoutes.auth;
+  final onSplash = location == AppRoutes.splash;
   switch (status) {
     case AuthStatus.unknown:
-      return null; // still restoring the session; don't flash the login screen
+      // Still restoring the session: show a loading screen. Never the real
+      // screens (they would look signed-in with no data) and not the login either.
+      return onSplash ? null : AppRoutes.splash;
     case AuthStatus.unauthenticated:
       return onAuth ? null : AppRoutes.auth;
     case AuthStatus.authenticated:
-      return onAuth ? AppRoutes.today : null;
+      return (onAuth || onSplash) ? AppRoutes.today : null;
   }
 }
 
 GoRouter createAppRouter(AuthProvider auth) => GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: AppRoutes.today,
+  initialLocation: AppRoutes.splash,
   refreshListenable: auth,
   redirect: (context, state) => authRedirect(auth.status, state.matchedLocation),
   routes: [
+    GoRoute(
+      path: AppRoutes.splash,
+      builder: (context, state) =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+    ),
     GoRoute(
       path: AppRoutes.auth,
       builder: (context, state) => const AuthScreen(),

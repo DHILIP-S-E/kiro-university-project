@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:flutter/services.dart';
 
 /// Text shared into the app from the system share sheet (a copied event page,
 /// a link, an email). The app turns it into an event or a capture.
@@ -12,32 +12,40 @@ abstract class ShareSource {
   Stream<String> get texts;
 }
 
-/// Pure: the text carried by a batch of shared items. Only text and URLs count;
-/// images and files are ignored here. Blank items are dropped.
-String? sharedTextFrom(List<SharedMediaFile> items) {
-  final parts = items
-      .where((i) => i.type == SharedMediaType.text || i.type == SharedMediaType.url)
-      .map((i) => i.path.trim())
-      .where((t) => t.isNotEmpty)
-      .toList();
-  return parts.isEmpty ? null : parts.join('\n');
-}
+/// Android share sheet via MainActivity's `pmos/share` channel (no plugin).
+class ChannelShareSource implements ShareSource {
+  final MethodChannel _channel;
+  final StreamController<String> _live = StreamController<String>.broadcast();
 
-class PluginShareSource implements ShareSource {
-  @override
-  Future<String?> initialText() async {
-    final items = await ReceiveSharingIntent.instance.getInitialMedia();
-    // Consume it so the same share is not delivered again on the next launch.
-    await ReceiveSharingIntent.instance.reset();
-    return sharedTextFrom(items);
+  ChannelShareSource({MethodChannel channel = const MethodChannel('pmos/share')})
+      : _channel = channel {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'onShare') {
+        final text = cleanSharedText(call.arguments);
+        if (text != null) _live.add(text);
+      }
+      return null;
+    });
   }
 
   @override
-  Stream<String> get texts => ReceiveSharingIntent.instance
-      .getMediaStream()
-      .map(sharedTextFrom)
-      .where((t) => t != null)
-      .cast<String>();
+  Future<String?> initialText() async {
+    try {
+      return cleanSharedText(await _channel.invokeMethod<String>('getInitialText'));
+    } on MissingPluginException {
+      return null; // not on Android (or a test): nothing was shared
+    }
+  }
+
+  @override
+  Stream<String> get texts => _live.stream;
+}
+
+/// Pure: shared text trimmed, or null when it is not a non-blank string.
+String? cleanSharedText(Object? raw) {
+  if (raw is! String) return null;
+  final text = raw.trim();
+  return text.isEmpty ? null : text;
 }
 
 class NoShareSource implements ShareSource {

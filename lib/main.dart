@@ -39,6 +39,8 @@ import 'package:personal_memory_os/core/services/share_source.dart';
 import 'package:personal_memory_os/core/sync/offline_services.dart';
 import 'package:personal_memory_os/core/sync/prefs_store.dart';
 import 'package:personal_memory_os/core/sync/sync_coordinator.dart';
+import 'package:personal_memory_os/core/widget/home_widget_bridge.dart';
+import 'package:personal_memory_os/core/widget/widget_sync.dart';
 import 'package:personal_memory_os/core/sync/sync_queue.dart';
 
 /// Toggle between stub data and the real FastAPI + Cognito backend.
@@ -66,6 +68,7 @@ void main() async {
     useRealBackend: _useRealBackend,
     store: PrefsKeyValueStore(prefs),
     shareSource: ChannelShareSource(),
+    widgetBridge: ChannelHomeWidgetBridge(),
   ));
 }
 
@@ -76,11 +79,15 @@ class PersonalMemoryOsApp extends StatefulWidget {
   /// Where text shared from the system share sheet comes from.
   final ShareSource shareSource;
 
+  /// Where the home-screen widget's content goes; null = no widget updates (tests).
+  final HomeWidgetBridge? widgetBridge;
+
   const PersonalMemoryOsApp({
     super.key,
     this.useRealBackend = false,
     required this.store,
     this.shareSource = const NoShareSource(),
+    this.widgetBridge,
   });
 
   @override
@@ -100,6 +107,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
   SyncCoordinator? _sync;
   PushRegistration? _push;
   StreamSubscription<String>? _shareSub;
+  WidgetSync? _widgetSync;
   String? _pendingShare;
 
   @override
@@ -156,6 +164,10 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
       }
     });
     _listenForShares();
+    final bridge = widget.widgetBridge;
+    if (bridge != null) {
+      _widgetSync = WidgetSync(_reminders, _events, bridge)..start();
+    }
     _router = createAppRouter(_auth);
   }
 
@@ -187,6 +199,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
   @override
   void dispose() {
     _shareSub?.cancel();
+    _widgetSync?.dispose();
     _sync?.dispose();
     _push?.dispose();
     super.dispose();

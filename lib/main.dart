@@ -65,7 +65,7 @@ void main() async {
   runApp(PersonalMemoryOsApp(
     useRealBackend: _useRealBackend,
     store: PrefsKeyValueStore(prefs),
-    shareSource: PluginShareSource(),
+    shareSource: ChannelShareSource(),
   ));
 }
 

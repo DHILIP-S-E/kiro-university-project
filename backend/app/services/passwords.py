@@ -1,8 +1,11 @@
 """Password hashing (bcrypt). Passwords are never stored or logged in plain text."""
 
+import re
+
 import bcrypt
 
 MIN_LENGTH = 8
+_HASH_RE = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
 MAX_BYTES = 72  # bcrypt ignores anything past 72 bytes; reject instead of silently truncating
 
 
@@ -23,7 +26,11 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    """Constant-time check. False for anything malformed, never raises."""
+    """Constant-time check. False for anything malformed, never raises.
+    The format is checked first: bcrypt's native code panics (not raises) on a
+    truncated hash, which would turn one corrupt row into a crashed login."""
+    if not _HASH_RE.match(password_hash or ""):
+        return False
     try:
         return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("ascii"))
     except (ValueError, TypeError):

@@ -143,6 +143,10 @@ class ReminderProvider extends ChangeNotifier {
       await _service.updateReminderStatus(id, ReminderStatus.completed);
       // Cancel local notification — reminder is done
       await NotificationService.cancelReminder(id);
+      // Conditional reminders ("if not done by Friday") are moot once this is done.
+      for (final dependent in _reminders.where((r) => r.dependsOnId == id)) {
+        await NotificationService.cancelReminder(dependent.id);
+      }
       final index = _reminders.indexWhere((r) => r.id == id);
       if (index != -1) {
         _reminders[index] =

@@ -30,6 +30,7 @@ class ApiReminderService implements ReminderService {
       'recurrence_rule': reminder.recurrenceRule,
       'source': reminder.source.name,
       'context_id': reminder.contextId,
+      'depends_on_id': reminder.dependsOnId,
       'offsets': reminder.offsets.map((o) => o.offset).toList(),
     });
     return reminderFromApi(data);

@@ -30,6 +30,7 @@ class Reminder {
   final String? recurrenceRule; // RFC 5545 RRULE
   final ReminderSource source;
   final String? contextId; // linked event or capture
+  final String? dependsOnId; // conditional: only fire if this reminder is not done
   final List<ReminderOffset> offsets;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -53,6 +54,7 @@ class Reminder {
     this.recurrenceRule,
     this.source = ReminderSource.manual,
     this.contextId,
+    this.dependsOnId,
     this.offsets = const [],
     required this.createdAt,
     required this.updatedAt,
@@ -75,6 +77,7 @@ class Reminder {
     String? recurrenceRule,
     ReminderSource? source,
     String? contextId,
+    String? dependsOnId,
     List<ReminderOffset>? offsets,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -96,6 +99,7 @@ class Reminder {
       recurrenceRule: recurrenceRule ?? this.recurrenceRule,
       source: source ?? this.source,
       contextId: contextId ?? this.contextId,
+      dependsOnId: dependsOnId ?? this.dependsOnId,
       offsets: offsets ?? this.offsets,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
@@ -119,6 +123,7 @@ class Reminder {
         'recurrenceRule': recurrenceRule,
         'source': source.name,
         'contextId': contextId,
+        'dependsOnId': dependsOnId,
         'offsets': offsets.map((o) => o.toJson()).toList(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
@@ -143,6 +148,7 @@ class Reminder {
         recurrenceRule: json['recurrenceRule'],
         source: ReminderSource.values.byName(json['source'] ?? 'manual'),
         contextId: json['contextId'],
+        dependsOnId: json['dependsOnId'],
         offsets: (json['offsets'] as List<dynamic>? ?? [])
             .map((o) => ReminderOffset.fromJson(o))
             .toList(),

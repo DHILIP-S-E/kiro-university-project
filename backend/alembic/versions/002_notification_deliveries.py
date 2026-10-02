@@ -1,4 +1,8 @@
-"""notification_deliveries table (spec R7.4)
+"""notification_deliveries: columns the dispatcher records (spec R7.4)
+
+001 already created this table with provider-oriented columns. The dispatcher
+logs channel / fire time / SNS message id / error, so add those. The 001
+columns stay (nullable, unused) so existing rows and downgrades remain valid.
 
 Revision ID: 002
 Revises: 001
@@ -15,21 +19,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "notification_deliveries",
-        sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("reminder_id", sa.String(36), nullable=False),
-        sa.Column("user_id", sa.String(255), nullable=False),
-        sa.Column("channel", sa.String(20), server_default="push"),
-        sa.Column("status", sa.String(20), server_default="triggered"),
-        sa.Column("fire_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("message_id", sa.String(255), nullable=True),
-        sa.Column("error", sa.Text, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-    )
-    op.create_index("ix_notification_deliveries_reminder_id", "notification_deliveries", ["reminder_id"])
+    op.add_column("notification_deliveries", sa.Column("channel", sa.String(20), server_default="push"))
+    op.add_column("notification_deliveries", sa.Column("fire_at", sa.DateTime(timezone=True), nullable=True))
+    op.add_column("notification_deliveries", sa.Column("message_id", sa.String(255), nullable=True))
+    op.add_column("notification_deliveries", sa.Column("error", sa.Text, nullable=True))
     op.create_index("ix_notification_deliveries_user_id", "notification_deliveries", ["user_id"])
 
 
 def downgrade() -> None:
-    op.drop_table("notification_deliveries")
+    op.drop_index("ix_notification_deliveries_user_id", table_name="notification_deliveries")
+    op.drop_column("notification_deliveries", "error")
+    op.drop_column("notification_deliveries", "message_id")
+    op.drop_column("notification_deliveries", "fire_at")
+    op.drop_column("notification_deliveries", "channel")

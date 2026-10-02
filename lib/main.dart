@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +33,7 @@ import 'package:personal_memory_os/core/services/device_service.dart';
 import 'package:personal_memory_os/core/services/notification_service.dart';
 import 'package:personal_memory_os/core/services/push_registration.dart';
 import 'package:personal_memory_os/core/services/push_token_source.dart';
+import 'package:personal_memory_os/core/services/share_source.dart';
 
 // Offline-first sync (spec R6)
 import 'package:personal_memory_os/core/sync/offline_services.dart';
@@ -62,6 +65,7 @@ void main() async {
   runApp(PersonalMemoryOsApp(
     useRealBackend: _useRealBackend,
     store: PrefsKeyValueStore(prefs),
+    shareSource: PluginShareSource(),
   ));
 }
 
@@ -69,10 +73,14 @@ class PersonalMemoryOsApp extends StatefulWidget {
   final bool useRealBackend;
   final KeyValueStore store;
 
+  /// Where text shared from the system share sheet comes from.
+  final ShareSource shareSource;
+
   const PersonalMemoryOsApp({
     super.key,
     this.useRealBackend = false,
     required this.store,
+    this.shareSource = const NoShareSource(),
   });
 
   @override
@@ -91,6 +99,8 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
   late final GoRouter _router;
   SyncCoordinator? _sync;
   PushRegistration? _push;
+  StreamSubscription<String>? _shareSub;
+  String? _pendingShare;
 
   @override
   void initState() {
@@ -140,13 +150,38 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
 
     _auth = AuthProvider(_authService)..checkAuthState();
     _auth.addListener(() {
-      if (_auth.isAuthenticated) _push?.register();
+      if (_auth.isAuthenticated) {
+        _push?.register();
+        _openPendingShare();
+      }
     });
+    _listenForShares();
     _router = createAppRouter(_auth);
+  }
+
+  /// Shared text waits until the user is signed in, then opens the event screen
+  /// with it so the AI can extract the event immediately.
+  void _listenForShares() {
+    widget.shareSource.initialText().then(_queueShare);
+    _shareSub = widget.shareSource.texts.listen(_queueShare);
+  }
+
+  void _queueShare(String? text) {
+    if (text == null || text.trim().isEmpty) return;
+    _pendingShare = text;
+    if (_auth.isAuthenticated) _openPendingShare();
+  }
+
+  void _openPendingShare() {
+    final text = _pendingShare;
+    if (text == null) return;
+    _pendingShare = null;
+    _router.push(AppRoutes.eventCreate, extra: text);
   }
 
   @override
   void dispose() {
+    _shareSub?.cancel();
     _sync?.dispose();
     _push?.dispose();
     super.dispose();

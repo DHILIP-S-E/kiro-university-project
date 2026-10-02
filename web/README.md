@@ -1,6 +1,6 @@
 # Personal Memory OS — Web Portal
 
-A React 18 + TypeScript SPA that gives users browser-based access to all Personal Memory OS features. Built with Vite, Tailwind CSS (dark theme), Amazon Cognito auth, and the same FastAPI backend that powers the mobile app.
+A React 18 + TypeScript SPA that gives users browser-based access to all Personal Memory OS features. Built with Vite, Tailwind CSS (dark theme), email/password login against the backend's own `/auth` API, and the same FastAPI backend that powers the mobile app.
 
 ---
 
@@ -26,15 +26,7 @@ A React 18 + TypeScript SPA that gives users browser-based access to all Persona
    # VITE_BACKEND_URL=https://api.yourdomain.com  # deployed backend
    ```
 
-   The Cognito values in `.env.example` are already pre-filled for the `ap-south-1` deployment:
-
-   ```env
-   VITE_COGNITO_USER_POOL_ID=ap-south-1_lCFBN7JwX
-   VITE_COGNITO_CLIENT_ID=qvh6nlqk5tt5oirrgvr7q5t47
-   VITE_COGNITO_REGION=ap-south-1
-   ```
-
-   Change these only if you are deploying your own Cognito User Pool.
+   That is the only setting. Sign-in uses the backend's `/auth/login`; there is no Cognito.
 
 ---
 
@@ -63,7 +55,7 @@ Output lands in `dist/`. Serve it with any static host (S3 + CloudFront, Nginx, 
 
 | Route | Screen | What it does |
 |---|---|---|
-| `/signin` | Sign In | Email + password login via Cognito. Links to Sign Up and Forgot Password. |
+| `/signin` | Sign In | Email + password login. Links to Sign Up. |
 | `/signup` | Sign Up | Register a new account. Shows a confirmation code field after submission; enter the code sent to your email to activate the account. |
 | `/forgot-password` | Forgot Password | Two-step reset: enter email to receive a code, then enter the code + new password. |
 | `/` | Dashboard | At-a-glance overview — overdue reminders (highlighted in red), next 3 upcoming events, 5 most recent captures, and summary counts. Each section links to its full page. |
@@ -72,7 +64,7 @@ Output lands in `dist/`. Serve it with any static host (S3 + CloudFront, Nginx, 
 | `/events/:id` | Event Detail | Tabbed detail view: Overview (edit inline), Captures (attachments for that event), Deadlines, Reminders (preview and apply an AI-suggested reminder policy), Summary (generate or view the AI-written event summary). |
 | `/capture` | Capture | Four-tab capture interface: Text Note, Link, Photo, and Document. Associate a capture with any of your events via the event selector. Recent captures are listed below with processing-status badges; captures with AI results show an expandable summary card. |
 | `/memory` | Memory | AI-powered personal knowledge base. Ask a question in natural language (answered server-side by Bedrock with source grounding), keyword-search your memory documents, or browse the full list. Each memory document card expands to show key topics, takeaways, action items, people, decisions, and resources. |
-| `/settings` | Settings | Account info (Cognito email), export all data as JSON, and a danger-zone account deletion flow. |
+| `/settings` | Settings | Account info (your email), export all data as JSON, and a danger-zone account deletion flow. |
 
 ---
 
@@ -135,7 +127,7 @@ web/
 │   │   ├── ProtectedRoute.tsx
 │   │   └── ui/             # Button, Badge, Card, EmptyState, LoadingSpinner
 │   ├── lib/
-│   │   ├── apiClient.ts    # axios instance with Cognito id_token interceptor
+│   │   ├── apiClient.ts    # axios instance that attaches the access token (refreshed automatically)
 │   │   ├── cognitoClient.ts
 │   │   └── colors.ts       # design tokens (never hard-code hex values)
 │   ├── types/

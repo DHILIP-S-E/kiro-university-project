@@ -17,9 +17,16 @@ void main() {
       expect(authRedirect(AuthStatus.authenticated, '/reminders'), isNull);
     });
 
-    test('while the session is being restored nothing redirects', () {
-      expect(authRedirect(AuthStatus.unknown, '/today'), isNull);
-      expect(authRedirect(AuthStatus.unknown, AppRoutes.auth), isNull);
+    test('while the session is being restored only the loading screen shows', () {
+      for (final loc in ['/today', '/reminders', AppRoutes.auth]) {
+        expect(authRedirect(AuthStatus.unknown, loc), AppRoutes.splash);
+      }
+      expect(authRedirect(AuthStatus.unknown, AppRoutes.splash), isNull);
+    });
+
+    test('the loading screen hands off once the session is known', () {
+      expect(authRedirect(AuthStatus.authenticated, AppRoutes.splash), AppRoutes.today);
+      expect(authRedirect(AuthStatus.unauthenticated, AppRoutes.splash), AppRoutes.auth);
     });
   });
 }

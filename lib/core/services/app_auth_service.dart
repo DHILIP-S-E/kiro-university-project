@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:personal_memory_os/core/config.dart';
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
@@ -51,8 +52,11 @@ class AppAuthService implements AuthService {
     final http.Response r;
     try {
       r = await _post(path, body);
-    } catch (_) {
-      throw const AuthException('Cannot reach the server. Check your connection.');
+    } catch (e) {
+      // Keep the real cause visible (log + short hint) instead of hiding every
+      // failure behind "check your connection".
+      debugPrint('AppAuthService $path failed: $e');
+      throw AuthException('Cannot reach the server (${e.runtimeType}). Check your connection.');
     }
     if (r.statusCode != 200 && r.statusCode != 201) {
       throw AuthException(_detail(r, 'Sign-in failed'));

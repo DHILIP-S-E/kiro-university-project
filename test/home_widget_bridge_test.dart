@@ -49,5 +49,24 @@ void main() {
 
   test('NoWidgetBridge does nothing', () async {
     await const NoWidgetBridge().update(snapshot);
+    expect(await const NoWidgetBridge().requestPin(), isFalse);
+  });
+
+  test('pin request returns the native answer', () async {
+    for (final answer in [true, false]) {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        expect(call.method, 'pin');
+        return answer;
+      });
+      expect(await ChannelHomeWidgetBridge().requestPin(), answer);
+    }
+  });
+
+  test('pin request is false when unsupported or failing', () async {
+    expect(await ChannelHomeWidgetBridge().requestPin(), isFalse); // no native side
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async => throw PlatformException(code: 'x'));
+    expect(await ChannelHomeWidgetBridge().requestPin(), isFalse);
   });
 }

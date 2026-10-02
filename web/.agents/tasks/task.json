@@ -1,0 +1,7 @@
+{
+  "task_id": "task-web-portal",
+  "task_description": "Build a complete React + TypeScript dark-theme web portal for Personal Memory OS that connects to the existing FastAPI backend with Cognito auth, covering Auth screens, Dashboard, Reminders, Events, EventDetail, Capture, Memory/AI Search, and Settings.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

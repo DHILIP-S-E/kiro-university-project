@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Build all auth screens (SignIn, SignUp, ForgotPassword) and the Dashboard. Depends on FEAT-001 (AuthContext, apiClient, types). Auth screens are the entry point to the whole app; Dashboard consumes the reminders, events, and captures API services which must be scaffolded here too.",
+  "status": "pending",
+  "steps": [
+    "Create web/src/features/auth/screens/SignInScreen.tsx: centered dark card, email + password inputs, sign-in button calling useAuth().signIn, error banner on failure, links to /signup and /forgot-password. On success navigate to /.",
+    "Create web/src/features/auth/screens/SignUpScreen.tsx: email, password, confirm-password inputs. On submit call signUp(); show confirmation-code field; on confirmSignUp() success navigate to /signin with success toast.",
+    "Create web/src/features/auth/screens/ForgotPasswordScreen.tsx: step 1 email → forgotPassword(); step 2 code + new-password → confirmForgotPassword() → navigate to /signin.",
+    "Create per-domain API service files needed by Dashboard: web/src/features/reminders/remindersApi.ts (listReminders, getReminder, createReminder, updateReminder, deleteReminder), web/src/features/events/eventsApi.ts (listEvents, getEvent, createEvent, updateEvent, deleteEvent, addDeadline, previewReminderPolicy, applyReminderPolicy, generateSummary, getEventSummary), web/src/features/capture/capturesApi.ts (getUploadUrl, registerCapture, createTextNote, saveLink, listCaptures, getCapture, getDownloadUrl, deleteCapture, uploadFileToS3), web/src/features/memory/memoryApi.ts (listMemory, searchMemory, askMemory, getMemoryDocument), web/src/features/ai/aiApi.ts (parseReminder, extractEvent). All use apiClient and return typed responses from src/types/index.ts.",
+    "Create web/src/features/dashboard/DashboardScreen.tsx: uses useQuery for active reminders, upcoming events, recent captures. Summary row: active count, upcoming events count, captures this week (filter by created_at >= 7 days ago). Overdue reminders (scheduled_at < now AND status=active) shown in error-red section at top. Next 3 upcoming events as cards with start_at and event_type badge. Last 5 captures as a compact list with processing_status badge. Each section has 'View all' link. Shows LoadingSpinner while fetching.",
+    "Create web/src/App.tsx: QueryClientProvider wrapping AuthProvider wrapping BrowserRouter. Route tree: /signin (SignInScreen), /signup (SignUpScreen), /forgot-password (ForgotPasswordScreen), ProtectedRoute > Layout > nested routes: index=DashboardScreen, reminders=placeholder, events=placeholder, events/:id=placeholder, capture=placeholder, memory=placeholder, settings=placeholder. Placeholders are simple div with 'Coming soon' so the app builds.",
+    "Create web/src/main.tsx: ReactDOM.createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)."
+  ],
+  "acceptance_criteria": [
+    "`cd web && npm run build` exits 0",
+    "Auth screens render at /signin, /signup, /forgot-password without crashing",
+    "Dashboard renders at / after sign-in, showing real data from the backend",
+    "Overdue reminders appear in the red section when they exist",
+    "All 5 API service files compile with typed return values"
+  ],
+  "verification": [
+    "cd web && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

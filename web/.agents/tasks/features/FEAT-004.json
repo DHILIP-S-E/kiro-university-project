@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Build the Capture screen, Memory/AI Search screen, and Settings screen — the final three pages. Depends on FEAT-002 (API services exist). Independent of FEAT-003.",
+  "status": "pending",
+  "steps": [
+    "Create web/src/features/capture/CaptureScreen.tsx: four tabs (Text Note | Link | Photo/Video | Document). Text Note tab: textarea + event selector dropdown (useQuery listEvents) + Submit → POST /captures/note. Link tab: url input + event selector + Submit → POST /captures/link. Photo/Video tab: file input (accept image/*,video/*) + event selector + Upload button → 3-step S3 flow: (1) POST /captures/upload-url {capture_type:'photo', file_extension, content_type, event_id} → get {upload_url,capture_id,s3_key}; (2) fetch(upload_url, {method:'PUT', body:file, headers:{'Content-Type':contentType}}) — no auth header on S3 PUT; (3) POST /captures {capture_id, storage_key:s3_key, capture_type:'photo', event_id, mime_type, duration:null}. Show upload progress indicator. Document tab: same flow with capture_type='document'. Below tabs: 'Recent Captures' section — useQuery listCaptures() latest 10, each with type icon, created_at, processing_status Badge, expand toggle showing ai_result (summary, topics, key_points, actions) if present.",
+    "Create web/src/features/memory/MemoryScreen.tsx: two interaction zones. Top zone 'Ask your memory': text input → POST /memory/ask → show AskResponse with answer text in a styled panel and sources list (each source as a chip: event_title, clickable to /events/:event_id if event_id present). Middle zone 'Search': text input (debounced 400ms) → GET /memory/search?q=... → results list. Bottom zone 'All memories': useQuery listMemory() as grid of MemoryDocument cards. Each card shows: event_title (heading), event_date (formatted), overview (2-line clamp), key_topics (up to 5 colored chips). Clicking a card expands a drawer or modal showing all fields: key_takeaways, things_learned, important_people, resources, links, action_items, decisions. Link to /events/:event_id if event_id present.",
+    "Create web/src/features/settings/SettingsScreen.tsx: three sections. Account section: 'Signed in as {email}' (get email from Cognito user attributes). Data section: 'Export All Data' button → GET /account/export → JSON.stringify the response → create Blob → trigger download as personal-memory-export.json. Danger zone section: red-bordered card, 'Delete My Account' button → opens confirmation dialog ('Type DELETE to confirm') → on confirm calls DELETE /account → calls signOut() → navigate to /signin.",
+    "Update web/src/App.tsx to replace placeholder routes with the real screens: /capture → CaptureScreen, /memory → MemoryScreen, /settings → SettingsScreen."
+  ],
+  "acceptance_criteria": [
+    "`cd web && npm run build` exits 0 with no TypeScript errors",
+    "Text note and link captures submit to real backend",
+    "Photo upload completes the 3-step S3 flow (upload-url → S3 PUT → register)",
+    "Memory search returns results from real backend",
+    "Memory ask shows answer and source citations",
+    "Settings export downloads a JSON file",
+    "Settings delete account flow signs out the user"
+  ],
+  "verification": [
+    "cd web && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,30 @@
+{
+  "project_type": "React 18 + TypeScript SPA (Vite), new project under web/ in a Flutter/Python monorepo",
+  "language": "TypeScript",
+  "build_system": "Vite 5 — build command is `npm run build`, dev server is `npm run dev`. All source under web/src/. No existing web/ directory; scaffold from scratch.",
+  "test_framework": "None mandated for this build; use `npm run build` (TypeScript compile) as the verification gate for every feature.",
+  "build_command": "cd web && npm run build",
+  "test_command": "cd web && npm run build",
+  "verification_instructions": "1. cd into web/. 2. Run `npm install` if node_modules absent. 3. Run `npm run build`. Zero TypeScript errors = pass. Optionally `npm run dev` for manual smoke-test against real backend.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Windows host (PowerShell). web/ does not exist yet — must be created. Do NOT touch backend/ or lib/ (Flutter). Backend CORS is open (`allow_origins=['*']`) so no proxy needed in dev. Use Cognito id_token (not access_token) as Bearer — backend validate_claims checks `aud` for id tokens.",
+  "contribution_requirements": "All colors from colors.ts tokens, never hard-coded hex. Dark theme throughout. AI calls are server-side only — never call Bedrock from the React app. AI-suggested reminders require user confirmation before POSTing to /reminders (R1.9).",
+  "key_patterns": "Feature-first directory layout: src/features/<domain>/. Shared UI in src/components/ui/. Types in src/types/index.ts. API services in src/features/<domain>/<domain>Api.ts. Auth via AuthContext (React Context + amazon-cognito-identity-js). Server state via @tanstack/react-query. Token: id_token from Cognito attached via axios request interceptor.",
+  "relevant_files": [
+    "backend/app/main.py",
+    "backend/app/auth.py",
+    "backend/app/routers/reminders.py",
+    "backend/app/routers/events.py",
+    "backend/app/routers/captures.py",
+    "backend/app/routers/memory.py",
+    "backend/app/routers/ai.py",
+    "backend/app/routers/account.py",
+    "backend/app/routers/devices.py",
+    "backend/app/models/reminder.py",
+    "backend/app/models/event.py",
+    "backend/app/models/capture.py",
+    "backend/app/models/memory.py",
+    "web/.agents/tasks/plan.md"
+  ],
+  "directory_structure": "web/ — entire new React app. web/src/features/<domain>/ per domain (auth, reminders, events, capture, memory, dashboard, settings, ai). web/src/components/ for shared Layout + UI primitives. web/src/lib/ for apiClient.ts, cognitoClient.ts, colors.ts. web/src/types/index.ts for all TS interfaces."
+}

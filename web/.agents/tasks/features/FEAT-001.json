@@ -1,0 +1,41 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Scaffold the Vite+React+TS project and build the foundational layer: package.json, Vite/Tailwind config, TypeScript types, design tokens, API client (axios+interceptor), Cognito auth client, AuthContext, ProtectedRoute, and all shared UI components (Layout, Button, Badge, Card, EmptyState, LoadingSpinner). This is the dependency base — all other features build on it.",
+  "status": "completed",
+  "steps": [
+    "Create web/package.json with exact pinned deps: react@18.3.1, react-dom@18.3.1, react-router-dom@6.26.2, @tanstack/react-query@5.59.0, axios@1.7.7, amazon-cognito-identity-js@6.3.12, date-fns@4.1.0. DevDeps: tailwindcss@3.4.14, autoprefixer@10.4.20, postcss@8.4.47, @types/react@18.3.12, @types/react-dom@18.3.1, typescript@5.6.3, vite@5.4.10, @vitejs/plugin-react@4.3.2. Scripts: dev=vite, build=tsc && vite build, preview=vite preview.",
+    "Create web/vite.config.ts: import react from '@vitejs/plugin-react'; export default defineConfig({ plugins: [react()], server: { port: 3000 } })",
+    "Create web/tsconfig.json: target ES2020, lib [ES2020,DOM,DOM.Iterable], jsx react-jsx, module ESNext, moduleResolution bundler, strict true, baseUrl src, paths { '@/*': ['./*'] }.",
+    "Create web/postcss.config.js and web/tailwind.config.js. Tailwind config extends theme with colors: background:'#0F0F0F', surface:'#1A1A1A', card:'#242424', accent:'#6366F1', accentHover:'#4F46E5', textPrimary:'#F9FAFB', textSecondary:'#9CA3AF', textMuted:'#6B7280', success:'#22C55E', warning:'#EAB308', error:'#EF4444', border:'#2D2D2D'. Content: ['./index.html','./src/**/*.{ts,tsx}'].",
+    "Create web/index.html: standard Vite HTML shell, div#root, script src=/src/main.tsx.",
+    "Create web/src/env.d.ts declaring ImportMetaEnv interface with VITE_BACKEND_URL, VITE_COGNITO_USER_POOL_ID, VITE_COGNITO_CLIENT_ID, VITE_COGNITO_REGION as strings.",
+    "Create web/.env.example with: VITE_BACKEND_URL=http://localhost:8000, VITE_COGNITO_USER_POOL_ID=ap-south-1_lCFBN7JwX, VITE_COGNITO_CLIENT_ID=qvh6nlqk5tt5oirrgvr7q5t47, VITE_COGNITO_REGION=ap-south-1. Also create web/.env copying the same values so dev works immediately.",
+    "Create web/src/lib/colors.ts exporting a colors const object with all 12 design tokens.",
+    "Create web/src/types/index.ts with TypeScript interfaces for Reminder, ReminderCreate, ReminderUpdate, EventDeadline, Event, DeadlineIn, EventCreate, EventUpdate, AIResult, Capture, UploadUrlRequest, UploadUrlResponse, RegisterCaptureRequest, TextNoteRequest, LinkRequest, MemoryDocument, AskRequest, AskResponse (fields: question:string, answer:string, sources:Array<{event_title:string,event_id:string|null}>), ParseReminderResponse, ExtractEventResponse. All field names must exactly match backend to_dict() output as documented in plan.md.",
+    "Create web/src/lib/cognitoClient.ts: configure CognitoUserPool from env vars. Export signIn(email,password): Promise<CognitoUser>, signUp(email,password): Promise<void>, confirmSignUp(email,code): Promise<void>, forgotPassword(email): Promise<void>, confirmForgotPassword(email,code,newPassword): Promise<void>, signOut(): void, getIdToken(): Promise<string|null>, getCurrentUser(): CognitoUser|null.",
+    "Create web/src/lib/apiClient.ts: axios.create({ baseURL: import.meta.env.VITE_BACKEND_URL }). Request interceptor: await getIdToken(), if token set Authorization header. Response interceptor: on 401 call signOut() and window.location.replace('/signin').",
+    "Create web/src/features/auth/AuthContext.tsx: React context + AuthProvider component. State: user (CognitoUser|null), isLoading (boolean). On mount: setUser(getCurrentUser()). Expose signIn, signUp, confirmSignUp, signOut, forgotPassword, confirmForgotPassword. useAuth() hook exported.",
+    "Create web/src/components/ProtectedRoute.tsx: if isLoading show LoadingSpinner; if !user redirect to /signin; else render <Outlet />.",
+    "Create web/src/components/Layout.tsx: fixed sidebar (#1A1A1A, 240px) with nav links (Dashboard '/', Reminders '/reminders', Events '/events', Capture '/capture', Memory '/memory', Settings '/settings'). Active link gets indigo background. Top bar with user email + Sign Out. Main area scrollable with background #0F0F0F. Renders <Outlet />.",
+    "Create web/src/components/ui/Button.tsx: variant=primary(bg-accent text-white)|secondary(border border-border bg-surface text-textPrimary)|ghost(text-textSecondary)|danger(bg-error text-white). Accepts size=sm|md|lg, disabled, onClick, type, className, children.",
+    "Create web/src/components/ui/Badge.tsx: maps status strings to tailwind color classes. priority: low=gray, medium=blue, high=orange, critical=red. reminder status: active=green, completed=gray, snoozed=yellow, cancelled=red. event status: draft=gray, registered=blue, upcoming=indigo, active=green, attended=purple, completed=gray. capture processing: queued=gray, processing=yellow, processed=green, failed=red.",
+    "Create web/src/components/ui/Card.tsx: div wrapper with rounded-xl p-4 and either bg-surface or bg-card based on variant prop.",
+    "Create web/src/components/ui/EmptyState.tsx: centered flex column with icon slot, title (text-textPrimary), subtitle (text-textMuted), optional action Button.",
+    "Create web/src/components/ui/LoadingSpinner.tsx: SVG spinner in accent color, size prop sm|md|lg."
+  ],
+  "acceptance_criteria": [
+    "web/ directory exists with all config files",
+    "`cd web && npm install` completes without errors",
+    "`cd web && npm run build` exits 0 with no TypeScript errors",
+    "All TypeScript interfaces in src/types/index.ts match backend to_dict() field names exactly",
+    "cognitoClient.ts uses env vars, not hard-coded values",
+    "apiClient.ts interceptor attaches id_token as Bearer header"
+  ],
+  "verification": [
+    "cd web && npm install",
+    "cd web && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": "1. tsconfig.node.json required for Vite config to compile correctly (references field). 2. PowerShell does not support && chaining — use cwd param or separate commands. 3. amazon-cognito-identity-js getSession callback types require explicit inline typing to satisfy strict TS. 4. Stub screens for all feature routes (dashboard, reminders, events, capture, memory, settings) were added so App.tsx compiles; later FEATs replace them. 5. Build passes with 0 TS errors; dist/ produced in 1.64s."
+}

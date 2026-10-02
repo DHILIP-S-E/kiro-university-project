@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Build the Reminders, Events, and EventDetail screens — the core CRUD pages. Depends on FEAT-002 (API services and types already exist). Independent of FEAT-004 (Capture/Memory/Settings).",
+  "status": "pending",
+  "steps": [
+    "Create web/src/features/reminders/CreateReminderModal.tsx: modal dialog with fields: title (required text), description (textarea), reminder_type (select: time/deadline/recurring/follow-up/multi-stage), scheduled_at (datetime-local input), timezone (text, default UTC), priority (select: low/medium/high/critical), alarm_enabled (toggle), notification_enabled (toggle), recurrence_rule (text, optional), offsets (text input, comma-separated, e.g. -3d,-1h). Submit calls createReminder(); closes modal and invalidates React Query cache on success.",
+    "Create web/src/features/reminders/RemindersScreen.tsx: filter tabs All/Active/Completed/Overdue (Overdue = scheduled_at<now AND status=active). List renders each reminder as a row card: title, priority Badge, scheduled_at formatted with date-fns, status Badge, action buttons (Mark Complete → PATCH status=completed, Delete → DELETE). 'New Reminder' button opens CreateReminderModal. 'Parse with AI' button opens a textarea; on submit calls aiApi.parseReminder, shows the parsed result in a preview card with a 'Create this reminder' confirm button (user must confirm before POST, per R1.9). Empty state if no reminders.",
+    "Create web/src/features/events/CreateEventModal.tsx: fields: title (required), description (textarea), event_type (select: hackathon/conference/workshop/webinar/meetup/meeting/appointment/deadline/custom), start_at (datetime-local, required), end_at (datetime-local, optional), timezone (text), location (text), is_virtual (toggle), event_url (url input), organizer (text), registration_url (url input). Deadlines section: dynamic list of deadline rows (title, deadline_type, deadline_at). Add/remove rows. Submit calls createEvent(); invalidates cache on success.",
+    "Create web/src/features/events/EventsScreen.tsx: list of events with filter tabs by status. Each event card: title, event_type badge, start_at, end_at, location or 'Virtual' chip, capture count chips (photo/voice/doc), status badge. Click navigates to /events/:id. 'New Event' button opens CreateEventModal. 'Extract from text' button: paste area → aiApi.extractEvent → pre-fills CreateEventModal (user still submits manually).",
+    "Create web/src/features/events/EventDetailScreen.tsx: fetches event by id (GET /events/:id). Header: title, event_type badge, status badge, start/end dates, location, organizer, event_url link. Tabs implemented with simple state: Overview | Captures | Deadlines | Reminders | Summary. Overview tab: all event fields in a read layout; 'Edit' button opens an inline edit form (PATCH fields). Captures tab: useQuery listCaptures({event_id}); shows each capture with type icon, processing_status badge, ai_result summary if available. Deadlines tab: lists event.deadlines; 'Add Deadline' form at bottom (POST /events/:id/deadlines). Reminders tab: 'Preview Reminder Policy' button → GET /events/:id/reminder-policy → shows a table of proposed reminders → 'Apply Policy' button → POST /events/:id/reminder-policy (creates reminders). Summary tab: if event.summary_id show GET /events/:id/summary as structured card (overview, key_topics chips, key_takeaways list, action_items list, decisions list, important_people list, resources list); else show 'Generate AI Summary' button → POST /events/:id/generate-summary → spinner → display result. Update App.tsx to replace the events and events/:id placeholder routes with the real screens.",
+    "Update web/src/App.tsx to wire /reminders → RemindersScreen and /events → EventsScreen and /events/:id → EventDetailScreen (removing the placeholders from FEAT-002)."
+  ],
+  "acceptance_criteria": [
+    "`cd web && npm run build` exits 0 with no TypeScript errors",
+    "Reminders screen lists, creates, completes, and deletes reminders against real backend",
+    "AI parse-reminder flow shows preview and requires confirm before saving",
+    "Events screen lists and creates events",
+    "EventDetail tabs all render without crash; Summary generation calls POST /events/:id/generate-summary"
+  ],
+  "verification": [
+    "cd web && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

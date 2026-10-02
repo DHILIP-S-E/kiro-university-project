@@ -363,7 +363,7 @@ async def generate_event_summary(
     Flow:
       1. Fetch event + all captures for the event
       2. Build captures_text from content/transcription fields
-      3. Call Bedrock Claude 3 Sonnet (summarize_event)
+      3. Call the strong Bedrock model (summarize_event)
       4. Save MemoryDocument to DB
       5. Update event.summary_id
     """

@@ -72,3 +72,4 @@ lib/aws/amplifyconfiguration_real.dart
 # OS
 .DS_Store
 Thumbs.db
+.claude/settings.json

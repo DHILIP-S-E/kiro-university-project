@@ -168,7 +168,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceElevated,
-        selectedColor: AppColors.accent.withOpacity(0.2),
+        selectedColor: AppColors.accent.withValues(alpha: 0.2),
         labelStyle: AppTextStyles.bodyMedium,
         side: const BorderSide(color: AppColors.cardBorder),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -184,7 +184,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.accent.withOpacity(0.15),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.15),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.accent, size: 24);

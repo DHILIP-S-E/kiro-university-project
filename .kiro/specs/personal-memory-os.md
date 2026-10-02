@@ -143,7 +143,7 @@ Aurora PostgreSQL          Amazon S3           EventBridge        Amazon SQS
 - [x] Offline sync queue implementation (R6)
 - [x] Property-based tests for reminder parsing (backend, hypothesis)
 - [x] Cloud reminder scheduling: EventBridge Scheduler -> dispatcher Lambda -> SNS (R1.5, R7)
-- [x] Capture pipeline: S3 -> EventBridge -> SQS -> processor (BDA / Transcribe / Claude) (R3)
+- [x] Capture pipeline: S3 -> EventBridge -> SQS -> processor (BDA / Transcribe / Nova) (R3)
 - [x] Knowledge Base sync + semantic retrieval with per-user filter (R4.2, R4.3)
 - [x] Account export and delete-all (R5.7, R5.8)
 - [x] Push token registration plumbing (PushRegistration + POST /devices); [ ] plug in firebase_messaging (needs a Firebase project)

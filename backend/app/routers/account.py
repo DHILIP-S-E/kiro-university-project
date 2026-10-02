@@ -17,6 +17,7 @@ from app.models.delivery import NotificationDelivery
 from app.models.event import Event, EventDeadline
 from app.models.memory import MemoryDocument
 from app.models.reminder import Reminder
+from app.models.user import User
 from app.services import knowledge_base, scheduling
 from app.services.s3_service import delete_object
 
@@ -71,5 +72,7 @@ async def delete_account(
     knowledge_base.remove_user_documents(user_id)
     for model in (NotificationDelivery, MemoryDocument, Capture, EventDeadline, Reminder, Event):
         await db.execute(delete(model).where(model.user_id == user_id))
+    # Last: the login itself, so the user cannot sign back into an emptied account.
+    await db.execute(delete(User).where(User.id == user_id))
     await db.commit()
     return {"deleted": True, "reminders": len(reminders), "captures": len(captures)}

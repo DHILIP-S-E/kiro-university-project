@@ -16,15 +16,9 @@ const navItems: NavItem[] = [
   { label: 'Settings', to: '/settings' },
 ];
 
-function getUserEmail(user: { getUsername?: () => string } | null): string {
-  if (!user) return '';
-  if (typeof user.getUsername === 'function') return user.getUsername();
-  return '';
-}
-
 export default function Layout() {
   const { user, signOut } = useAuth();
-  const email = getUserEmail(user);
+  const email = user?.email ?? '';
 
   return (
     <div className="flex min-h-screen bg-background">

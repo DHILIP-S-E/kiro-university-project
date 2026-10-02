@@ -14,7 +14,7 @@
 | Event routing | Amazon EventBridge |
 | Reliable scheduling | Amazon EventBridge Scheduler |
 | Push notifications | Amazon SNS → APNs (iOS) + FCM (Android) |
-| AI models | Amazon Bedrock (Claude 3, Titan) |
+| AI models | Amazon Bedrock (Amazon Nova, Titan) |
 | Multimedia extraction | Amazon Bedrock Data Automation |
 | Transcription | Bedrock Data Automation / Amazon Transcribe |
 | AI retrieval (RAG) | Amazon Bedrock Knowledge Bases |
@@ -103,9 +103,9 @@ Never use production data in dev or staging.
 
 ```
 Simple extraction / classification  → cheaper/faster model (e.g. Titan Text Lite)
-Summarization                       → mid-tier model (e.g. Claude 3 Haiku)
-Cross-event synthesis               → stronger model (e.g. Claude 3 Sonnet)
-Complex personal question + RAG     → Claude 3 Sonnet / Opus
+Summarization                       → fast model (e.g. Amazon Nova Lite)
+Cross-event synthesis               → stronger model (e.g. Amazon Nova Pro)
+Complex personal question + RAG     → Amazon Nova Pro
 ```
 
 Model IDs must be configurable — never hard-code in Lambda source.

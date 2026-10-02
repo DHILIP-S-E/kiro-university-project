@@ -11,7 +11,7 @@ from pathlib import Path
 
 import boto3
 from app.config import settings
-from app.services.reminder_parser import normalize_reminder
+from app.services.reminder_parser import detect_ambiguities, normalize_reminder
 
 _bedrock_client = None
 
@@ -39,6 +39,16 @@ def _render(template: str, **values: str) -> str:
     return template
 
 
+def guardrail_kwargs() -> dict:
+    """Guardrail parameters for invoke_model; empty when no guardrail is configured."""
+    if not (settings.guardrail_id and settings.guardrail_version):
+        return {}
+    return {
+        "guardrailIdentifier": settings.guardrail_id,
+        "guardrailVersion": settings.guardrail_version,
+    }
+
+
 def _invoke_claude(model_id: str, prompt: str, max_tokens: int = 1024) -> str:
     """Invoke a Bedrock Claude model and return the text response."""
     client = _get_client()
@@ -53,6 +63,7 @@ def _invoke_claude(model_id: str, prompt: str, max_tokens: int = 1024) -> str:
         body=body,
         contentType="application/json",
         accept="application/json",
+        **guardrail_kwargs(),
     )
     result = json.loads(response["body"].read())
     return result["content"][0]["text"]
@@ -80,7 +91,10 @@ def parse_reminder(text: str, timezone: str = "UTC") -> dict:
         input=text,
     )
     raw = _invoke_claude(settings.bedrock_model_haiku, prompt, max_tokens=512)
-    return normalize_reminder(_extract_json(raw), fallback_text=text[:100])
+    result = normalize_reminder(_extract_json(raw), fallback_text=text[:100])
+    # The user must confirm anything uncertain before a reminder is created.
+    result["ambiguities"] = detect_ambiguities(result, text, datetime.utcnow())
+    return result
 
 
 def extract_event(text: str) -> dict:

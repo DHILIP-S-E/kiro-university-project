@@ -10,10 +10,10 @@ No I/O — property-tested in tests/test_reminder_parser_properties.py.
 """
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
-VALID_TYPES = ("time", "date", "deadline", "recurring", "follow_up", "multi_stage")
+VALID_TYPES = ("time", "date", "deadline", "recurring", "follow_up", "multi_stage", "conditional")
 VALID_PRIORITIES = ("high", "medium", "low")
 MAX_TITLE_LENGTH = 500
 
@@ -84,3 +84,31 @@ def normalize_reminder(raw: Any, fallback_text: str = "") -> dict:
         "priority": priority,
         "offsets": normalize_offsets(data.get("offsets")),
     }
+
+
+_TIME_HINT_RE = re.compile(r"\d\s*(?::\d{2}|am|pm|a\.m\.|p\.m\.)|noon|midnight|morning|evening|night", re.I)
+_TZ_SUFFIX_RE = re.compile(r"(Z|[+-]\d{2}:?\d{2})$")
+
+
+def detect_ambiguities(parsed: dict, original_text: str, now: datetime) -> list[dict]:
+    """Things the user must confirm before the reminder is created (product
+    principle: AI suggests, the user confirms). Pure; `parsed` is the output of
+    normalize_reminder. Each item is {"code", "message"}."""
+    found: list[dict] = []
+    scheduled = parsed.get("scheduled_at")
+    if scheduled is None:
+        if parsed.get("type") != "recurring":
+            found.append({"code": "no_date", "message": "No date or time was found. When should this fire?"})
+        return found
+
+    value = datetime.fromisoformat(scheduled.replace("Z", "+00:00"))
+    if not _TZ_SUFFIX_RE.search(scheduled):
+        found.append({"code": "no_timezone", "message": "No timezone was given; your device timezone will be used."})
+        compare_now = now.replace(tzinfo=None)
+    else:
+        compare_now = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+    if value <= compare_now:
+        found.append({"code": "in_past", "message": "That time has already passed. Did you mean a later date?"})
+    if value.hour == 0 and value.minute == 0 and not _TIME_HINT_RE.search(original_text):
+        found.append({"code": "time_assumed", "message": "No time of day was given; midnight was assumed. What time?"})
+    return found

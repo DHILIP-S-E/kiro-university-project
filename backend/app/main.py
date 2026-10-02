@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import get_current_user_id
-from app.routers import reminders, events, captures, memory, ai, account, devices
+from app.routers import reminders, events, captures, memory, ai, account, devices, auth
 
 app = FastAPI(
     title="Personal Memory OS API",
@@ -18,6 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(reminders.router, prefix="/reminders", tags=["reminders"])
 app.include_router(events.router, prefix="/events", tags=["events"])
 app.include_router(captures.router, prefix="/captures", tags=["captures"])

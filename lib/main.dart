@@ -43,11 +43,11 @@ import 'package:personal_memory_os/core/widget/home_widget_bridge.dart';
 import 'package:personal_memory_os/core/widget/widget_sync.dart';
 import 'package:personal_memory_os/core/sync/sync_queue.dart';
 
-/// Toggle between stub data and the real FastAPI + Cognito backend.
-/// In production, set via --dart-define=USE_REAL_BACKEND=true
+/// Real accounts and data on the live backend by default. For an offline demo with
+/// fake data and no account: --dart-define=USE_REAL_BACKEND=false
 const bool _useRealBackend = bool.fromEnvironment(
   'USE_REAL_BACKEND',
-  defaultValue: false, // false = stub mode (no backend needed)
+  defaultValue: true,
 );
 
 void main() async {

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     cognito_region: str = "us-east-1"
     cognito_app_client_id: str = ""
     auto_create_tables: bool = False         # local dev with SQLite: create tables on startup
+    cors_origins: str = "*"                  # comma-separated browser origins, e.g. https://app.example.com
     jwt_secret: str = ""                     # >= 32 chars; enables the app's own email/password login
     allow_insecure_dev_auth: bool = False  # local dev only; never set in production
     scheduler_target_arn: str = ""   # notification-dispatcher Lambda ARN

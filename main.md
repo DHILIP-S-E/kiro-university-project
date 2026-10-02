@@ -41,17 +41,26 @@ flutter run
 
 The app boots in stub mode with seeded demo data. All services have `Stub*` implementations that return realistic mock data without needing a live AWS backend.
 
-### Configure the AWS backend
+### Use the live backend and web app
 
-1. Deploy the infrastructure: `cd infra && pip install -r requirements.txt && cdk deploy --all` (needs Docker)
-2. Create the SNS platform application for FCM/APNs and pass its ARN: `cdk deploy --all -c sns_platform_app_arn=<arn>`
-3. Run the app against it:
+The backend runs on AWS App Runner and the web app on Amplify Hosting (about $6-10 a month;
+see `infra/deploy/README.md`).
+
+| | Address |
+|---|---|
+| API | https://wrducpxx4p.ap-south-1.awsapprunner.com |
+| Web | https://main.d1kc2e2qvfes41.amplifyapp.com |
+
+Run the phone app against it:
 
 ```bash
-flutter run --dart-define=USE_REAL_BACKEND=true   --dart-define=BACKEND_URL=<ApiUrl output>   --dart-define=COGNITO_CLIENT_ID=<AppClientId output>   --dart-define=COGNITO_REGION=<region>
+flutter run --dart-define=USE_REAL_BACKEND=true   --dart-define=BACKEND_URL=https://wrducpxx4p.ap-south-1.awsapprunner.com
 ```
 
-Local backend development: see `backend/README.md`.
+Sign-in is the app's own email/password login (no Cognito). Redeploy with
+`infra/deploy/deploy-backend.sh` and `infra/deploy/deploy-web.sh`.
+
+Local backend development (no database setup needed): see `backend/README.md`.
 
 ---
 

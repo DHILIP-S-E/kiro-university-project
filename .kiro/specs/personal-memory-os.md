@@ -149,7 +149,7 @@ Aurora PostgreSQL          Amazon S3           EventBridge        Amazon SQS
 - [x] Push token registration plumbing (PushRegistration + POST /devices); [ ] plug in firebase_messaging (needs a Firebase project)
 - [ ] Google sign-in via Cognito Hosted UI
 - [x] Bedrock Guardrails on model invocations (CDK guardrail + applied in API and worker)
-- [x] Clipboard capture and Android share-sheet capture for events; [ ] iOS share extension and home-screen widgets (native code)
+- [x] Clipboard capture and Android share-sheet capture for events; [x] Android home-screen widget (daily brief, pinned from Settings); [ ] iOS share extension and iOS widget (need Xcode)
 - [x] Memory -> Action -> Reminder: dated action items from captures, one-tap 'create reminder?' suggestions
 - [x] Smart reminder plan per event type with one-tap 'create all' (on-device, mirrors the backend policy)
 - [x] Capture status polling so 'AI ready' appears without a manual refresh

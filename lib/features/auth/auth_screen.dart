@@ -56,18 +56,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    final provider = context.read<AuthProvider>();
-    final success = await provider.signInWithGoogle();
-    if (!mounted) return;
-    if (success) {
-      context.go(AppRoutes.today);
-    } else if (provider.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(provider.error!)));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,10 +97,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: 20),
-              _buildDivider(),
-              const SizedBox(height: 20),
-              _buildGoogleButton(),
               const SizedBox(height: 24),
               Center(
                 child: TextButton(
@@ -208,33 +192,6 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('or', style: AppTextStyles.bodyMedium),
-        ),
-        const Expanded(child: Divider()),
-      ],
-    );
-  }
-
-  Widget _buildGoogleButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _handleGoogleSignIn,
-        icon: const Icon(Icons.g_mobiledata, size: 24),
-        label: const Text('Continue with Google'),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-      ),
     );
   }
 }

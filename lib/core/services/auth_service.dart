@@ -1,13 +1,21 @@
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
 
-/// Abstracts Amazon Cognito authentication.
-/// [StubAuthService] for offline demos; CognitoAuthService for the real user pool.
+/// A sign-in problem with a message safe to show the user.
+class AuthException implements Exception {
+  final String message;
+  const AuthException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+/// Sign-in and sign-up. [StubAuthService] for offline demos; AppAuthService for
+/// the real backend.
 abstract class AuthService {
   Future<AppUser?> getCurrentUser();
   Future<AppUser> signInWithEmail(String email, String password);
   Future<AppUser> signInWithGoogle();
   Future<AppUser> signUp(String email, String password, String displayName);
-  Future<void> confirmSignUp(String email, String code);
   Future<void> signOut();
 }
 
@@ -54,9 +62,6 @@ class StubAuthService implements AuthService {
     );
     return _currentUser!;
   }
-
-  @override
-  Future<void> confirmSignUp(String email, String code) async {}
 
   @override
   Future<void> signOut() async {

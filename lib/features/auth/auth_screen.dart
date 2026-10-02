@@ -50,43 +50,7 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
     if (!mounted) return;
-    if (provider.pendingConfirmationEmail != null) {
-      await _promptForCode(provider, email, password);
-    } else if (provider.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(provider.error!)));
-    }
-  }
-
-  /// Cognito emails a code on sign-up; the account is usable once it is entered.
-  Future<void> _promptForCode(
-      AuthProvider provider, String email, String password) async {
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Verify your email'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'Code sent to $email'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: const Text('Verify')),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (code == null || code.isEmpty || !mounted) return;
-    final ok = await provider.confirmSignUp(email, code, password);
-    if (!mounted) return;
-    if (ok) {
-      context.go(AppRoutes.today);
-    } else if (provider.error != null) {
+    if (provider.error != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(provider.error!)));
     }

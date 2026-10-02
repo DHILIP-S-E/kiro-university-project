@@ -56,6 +56,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Home-screen widget -->
+        <receiver
+            android:name=".PmosWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pmos_widget_info"/>
+        </receiver>
+
         <!-- flutter_local_notifications boot receiver -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"

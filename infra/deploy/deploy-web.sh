@@ -26,4 +26,13 @@ JOB=$(echo "$OUT" | python -c "import sys,json; print(json.load(sys.stdin)['jobI
 URL=$(echo "$OUT" | python -c "import sys,json; print(json.load(sys.stdin)['zipUploadUrl'])")
 curl -sf -T "$ZIP" "$URL" >/dev/null
 aws amplify start-deployment --app-id "$APP" --branch-name main --job-id "$JOB" --region "$AWS_REGION" >/dev/null
+# Wait for Amplify to finish publishing before claiming success.
+for _ in $(seq 1 40); do
+  STATUS=$(aws amplify get-job --app-id "$APP" --branch-name main --job-id "$JOB" --region "$AWS_REGION" --query job.summary.status --output text)
+  case "$STATUS" in
+    SUCCEED) break ;;
+    FAILED|CANCELLED) echo "Deployment $STATUS" >&2; exit 1 ;;
+  esac
+  sleep 3
+done
 echo "Deployed: https://main.$APP.amplifyapp.com"

@@ -27,7 +27,10 @@ import 'package:personal_memory_os/core/services/api_event_service.dart';
 import 'package:personal_memory_os/core/services/api_memory_service.dart';
 import 'package:personal_memory_os/core/services/api_reminder_service.dart';
 import 'package:personal_memory_os/core/services/cognito_auth_service.dart';
+import 'package:personal_memory_os/core/services/device_service.dart';
 import 'package:personal_memory_os/core/services/notification_service.dart';
+import 'package:personal_memory_os/core/services/push_registration.dart';
+import 'package:personal_memory_os/core/services/push_token_source.dart';
 
 // Offline-first sync (spec R6)
 import 'package:personal_memory_os/core/sync/offline_services.dart';
@@ -87,6 +90,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
   late final MemoryProvider _memory;
   late final GoRouter _router;
   SyncCoordinator? _sync;
+  PushRegistration? _push;
 
   @override
   void initState() {
@@ -103,6 +107,9 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
       _authService = cognito;
       _aiService = ApiAiService(client);
       _accountService = ApiAccountService(client);
+      // Swap NoPushTokenSource for a firebase_messaging-backed source to enable cloud push.
+      _push = PushRegistration(ApiDeviceService(client), NoPushTokenSource(), widget.store)
+        ..listenForRefresh();
       _reminders = ReminderProvider(
           OfflineReminderService(remoteReminders, queue, widget.store));
       _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue));
@@ -132,12 +139,16 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
     }
 
     _auth = AuthProvider(_authService)..checkAuthState();
+    _auth.addListener(() {
+      if (_auth.isAuthenticated) _push?.register();
+    });
     _router = createAppRouter(_auth);
   }
 
   @override
   void dispose() {
     _sync?.dispose();
+    _push?.dispose();
     super.dispose();
   }
 

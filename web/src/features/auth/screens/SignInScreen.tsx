@@ -78,12 +78,9 @@ export default function SignInScreen() {
             </Button>
           </form>
 
-          <div className="flex justify-between text-sm text-textSecondary pt-2">
+          <div className="text-sm text-textSecondary pt-2">
             <Link to="/signup" className="hover:text-textPrimary">
               Create account
-            </Link>
-            <Link to="/forgot-password" className="hover:text-textPrimary">
-              Forgot password?
             </Link>
           </div>
         </div>

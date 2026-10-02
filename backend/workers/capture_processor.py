@@ -9,7 +9,7 @@ Two kinds of messages arrive on the queue:
    * voice: start an Amazon Transcribe job (async).
 2. A result object under processed/...   -> finish the capture.
    Transcribe and BDA write their output there; we read the text, summarise
-   with Bedrock Claude, and store the AI result (spec R3.4-R3.7).
+   with the Bedrock text model, and store the AI result (spec R3.4-R3.7).
 
 Partial batch failures are reported so SQS retries only failed messages and,
 after maxReceiveCount, moves them to the DLQ.
@@ -26,6 +26,7 @@ import psycopg2
 
 from app.db_url import sync_database_url
 from app.services.action_items import normalize_actions
+from app.services.converse import build_request, extract_text
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -97,13 +98,6 @@ def text_from_result(result: dict) -> str:
     return "\n".join(p for p in parts if p.strip())
 
 
-def _guardrail_kwargs() -> dict:
-    gid, version = os.environ.get("GUARDRAIL_ID"), os.environ.get("GUARDRAIL_VERSION")
-    if not (gid and version):
-        return {}
-    return {"guardrailIdentifier": gid, "guardrailVersion": version}
-
-
 def summarise(text: str) -> dict:
     today = datetime.now(timezone.utc).date().isoformat()
     prompt = (
@@ -115,17 +109,12 @@ def summarise(text: str) -> dict:
         "and use null when no date is stated. Never invent a date.\n\n"
         + text[:8000]
     )
-    resp = boto3.client("bedrock-runtime").invoke_model(
-        modelId=os.environ["BEDROCK_MODEL_HAIKU"],
-        body=json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 800,
-            "temperature": 0.1,
-            "messages": [{"role": "user", "content": prompt}],
-        }),
-        **_guardrail_kwargs(),
+    request = build_request(
+        os.environ["BEDROCK_MODEL_FAST"], prompt, max_tokens=800,
+        guardrail_id=os.environ.get("GUARDRAIL_ID", ""),
+        guardrail_version=os.environ.get("GUARDRAIL_VERSION", ""),
     )
-    raw = json.loads(resp["body"].read())["content"][0]["text"]
+    raw = extract_text(boto3.client("bedrock-runtime").converse(**request))
     match = re.search(r"\{.*\}", raw, re.DOTALL)
     return json.loads(match.group()) if match else {"summary": raw[:500]}
 

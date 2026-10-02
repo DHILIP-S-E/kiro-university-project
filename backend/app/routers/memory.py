@@ -74,13 +74,13 @@ async def ask_memory(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    RAG memory Q&A powered by Amazon Bedrock Claude 3 Sonnet.
+    RAG memory Q&A powered by the strong Amazon Bedrock model.
 
     Flow:
     1. Keyword search memory_documents for relevant context
     2. Fall back to most recent 5 documents if no keyword match
     3. Build context string from matched documents
-    4. Call Bedrock Claude 3 Sonnet with context + question
+    4. Call the strong Bedrock model with context + question
     5. Return grounded answer with source citations
 
     Every answer is traceable to stored memory — no hallucination from training data.

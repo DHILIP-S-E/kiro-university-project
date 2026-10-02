@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Build the Reminders, Events, and EventDetail screens — the core CRUD pages. Depends on FEAT-002 (API services and types already exist). Independent of FEAT-004 (Capture/Memory/Settings).",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Create web/src/features/reminders/CreateReminderModal.tsx: modal dialog with fields: title (required text), description (textarea), reminder_type (select: time/deadline/recurring/follow-up/multi-stage), scheduled_at (datetime-local input), timezone (text, default UTC), priority (select: low/medium/high/critical), alarm_enabled (toggle), notification_enabled (toggle), recurrence_rule (text, optional), offsets (text input, comma-separated, e.g. -3d,-1h). Submit calls createReminder(); closes modal and invalidates React Query cache on success.",
     "Create web/src/features/reminders/RemindersScreen.tsx: filter tabs All/Active/Completed/Overdue (Overdue = scheduled_at<now AND status=active). List renders each reminder as a row card: title, priority Badge, scheduled_at formatted with date-fns, status Badge, action buttons (Mark Complete → PATCH status=completed, Delete → DELETE). 'New Reminder' button opens CreateReminderModal. 'Parse with AI' button opens a textarea; on submit calls aiApi.parseReminder, shows the parsed result in a preview card with a 'Create this reminder' confirm button (user must confirm before POST, per R1.9). Empty state if no reminders.",
@@ -22,5 +22,5 @@
     "cd web && npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "1. App.tsx was already correctly wired from FEAT-002 stubs — real screens drop in as direct replacements with no routing changes needed. 2. CreateReminderModal and CreateEventModal accept an optional prefill prop to support AI parse/extract flows. 3. AI parse-reminder flow strictly requires user confirmation (preview card + 'Create this reminder' button) before POSTing, per R1.9. 4. AI extract-event flow pre-fills CreateEventModal; user must submit manually — AI result is never auto-saved. 5. EventDetail Reminders tab: 'Preview Reminder Policy' calls GET and shows table; 'Apply Policy' button only calls POST after user clicks — not auto-applied. 6. EventDetail Summary tab: 'Generate AI Summary' button calls POST /events/:id/generate-summary on press only; existing summary_id triggers GET /events/:id/summary on load. 7. capturesApi.listCaptures already accepts event_id param — no changes needed to FEAT-002 files. 8. Build passes: 527 modules transformed, 0 TypeScript errors, dist/ produced in 2.23s."
 }

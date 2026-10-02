@@ -7,6 +7,10 @@ import 'package:personal_memory_os/core/widget/widget_snapshot.dart';
 /// redraws every placed widget; platforms without widgets use [NoWidgetBridge].
 abstract class HomeWidgetBridge {
   Future<void> update(WidgetSnapshot snapshot);
+
+  /// Ask the launcher to add the widget to the home screen (the user confirms in a
+  /// system dialog). False when this phone or launcher does not support it.
+  Future<bool> requestPin();
 }
 
 class ChannelHomeWidgetBridge implements HomeWidgetBridge {
@@ -25,6 +29,17 @@ class ChannelHomeWidgetBridge implements HomeWidgetBridge {
       // A widget that fails to redraw must never break the app.
     }
   }
+
+  @override
+  Future<bool> requestPin() async {
+    try {
+      return await _channel.invokeMethod<bool>('pin') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
 }
 
 class NoWidgetBridge implements HomeWidgetBridge {
@@ -32,4 +47,7 @@ class NoWidgetBridge implements HomeWidgetBridge {
 
   @override
   Future<void> update(WidgetSnapshot snapshot) async {}
+
+  @override
+  Future<bool> requestPin() async => false;
 }

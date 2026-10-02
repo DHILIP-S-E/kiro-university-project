@@ -5,7 +5,8 @@ sets it explicitly with monkeypatch."""
 
 import os
 
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://u:p@localhost/db")
+# Never touch a real database from tests, whatever is in a local .env.
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 import pytest
 

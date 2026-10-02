@@ -1,81 +1,47 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { CognitoUser, ISignUpResult } from 'amazon-cognito-identity-js';
 import {
+  AuthUser,
   getCurrentUser,
-  signIn as cognitoSignIn,
-  signUp as cognitoSignUp,
-  confirmSignUp as cognitoConfirmSignUp,
-  signOut as cognitoSignOut,
-  forgotPassword as cognitoForgotPassword,
-  confirmForgotPassword as cognitoConfirmForgotPassword,
-} from '../../lib/cognitoClient';
+  signIn as clientSignIn,
+  signUp as clientSignUp,
+  signOut as clientSignOut,
+} from '../../lib/authClient';
 
 interface AuthContextValue {
-  user: CognitoUser | null;
+  user: AuthUser | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<ISignUpResult>;
-  confirmSignUp: (email: string, code: string) => Promise<void>;
+  /** Creates the account and signs in. */
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => void;
-  forgotPassword: (email: string) => Promise<void>;
-  confirmForgotPassword: (email: string, code: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<CognitoUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
+    setUser(getCurrentUser());
     setIsLoading(false);
   }, []);
 
   async function signIn(email: string, password: string): Promise<void> {
-    const cognitoUser = await cognitoSignIn(email, password);
-    setUser(cognitoUser);
+    setUser(await clientSignIn(email, password));
   }
 
-  async function signUp(email: string, password: string): Promise<ISignUpResult> {
-    return cognitoSignUp(email, password);
-  }
-
-  async function confirmSignUp(email: string, code: string): Promise<void> {
-    return cognitoConfirmSignUp(email, code);
+  async function signUp(email: string, password: string, displayName?: string): Promise<void> {
+    setUser(await clientSignUp(email, password, displayName));
   }
 
   function signOut(): void {
-    cognitoSignOut();
+    clientSignOut();
     setUser(null);
   }
 
-  async function forgotPassword(email: string): Promise<void> {
-    return cognitoForgotPassword(email);
-  }
-
-  async function confirmForgotPassword(
-    email: string,
-    code: string,
-    newPassword: string,
-  ): Promise<void> {
-    return cognitoConfirmForgotPassword(email, code, newPassword);
-  }
-
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        signIn,
-        signUp,
-        confirmSignUp,
-        signOut,
-        forgotPassword,
-        confirmForgotPassword,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

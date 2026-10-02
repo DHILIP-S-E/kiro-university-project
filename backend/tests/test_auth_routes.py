@@ -120,3 +120,12 @@ def test_protected_routes_reject_missing_and_forged_tokens(client):
 def test_login_unavailable_without_a_secret(client, monkeypatch):
     monkeypatch.setattr(settings, "jwt_secret", "")
     assert client.post("/auth/login", json={"email": "a@b.co", "password": "whatever1"}).status_code == 503
+
+
+def test_deleting_the_account_removes_the_login_too(client):
+    tokens = register(client).json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+    assert client.delete("/account", headers=headers).status_code == 200
+    # the old token is still cryptographically valid, but the account is gone
+    assert client.get("/auth/me", headers=headers).status_code == 401
+    assert client.post("/auth/login", json={"email": "ada@example.com", "password": "correct horse"}).status_code == 401

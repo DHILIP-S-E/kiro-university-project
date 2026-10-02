@@ -212,6 +212,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
         Provider<AuthService>.value(value: _authService),
         Provider<AiService>.value(value: _aiService),
         Provider<AccountService>.value(value: _accountService),
+        Provider<HomeWidgetBridge>.value(value: widget.widgetBridge ?? const NoWidgetBridge()),
         ChangeNotifierProvider.value(value: _auth),
         ChangeNotifierProvider.value(value: _reminders),
         ChangeNotifierProvider.value(value: _events),

@@ -1,12 +1,20 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'dart:io';
 import 'package:personal_memory_os/core/models/capture.dart';
 import 'package:personal_memory_os/core/services/capture_service.dart';
+import 'package:personal_memory_os/core/sync/sync_queue.dart';
+import 'package:personal_memory_os/core/utils/action_suggestions.dart';
 
 class CaptureProvider extends ChangeNotifier {
-  final CaptureService _service;
+  static const _handledKey = 'handled_action_suggestions_v1';
 
-  CaptureProvider(this._service);
+  final CaptureService _service;
+  final KeyValueStore? _store;
+  final Set<String> _handled = {};
+  bool _handledLoaded = false;
+
+  CaptureProvider(this._service, {KeyValueStore? store}) : _store = store;
 
   List<Capture> _captures = [];
   bool _isLoading = false;
@@ -25,7 +33,28 @@ class CaptureProvider extends ChangeNotifier {
   List<Capture> get recentCaptures =>
       _captures.take(10).toList();
 
+  /// AI-extracted actions the user has not yet turned into a reminder or dismissed.
+  List<ActionSuggestion> pendingActions({String? eventId}) =>
+      pendingSuggestions(_captures, _handled, eventId: eventId);
+
+  /// Record the user's decision so the suggestion never reappears (survives restarts).
+  Future<void> markActionHandled(ActionSuggestion suggestion) async {
+    _handled.add(suggestion.key);
+    notifyListeners();
+    await _store?.write(_handledKey, jsonEncode(_handled.toList()));
+  }
+
+  Future<void> _loadHandled() async {
+    if (_handledLoaded) return;
+    _handledLoaded = true;
+    final raw = await _store?.read(_handledKey);
+    if (raw != null && raw.isNotEmpty) {
+      _handled.addAll((jsonDecode(raw) as List<dynamic>).cast<String>());
+    }
+  }
+
   Future<void> loadCaptures() async {
+    await _loadHandled();
     _isLoading = true;
     _error = null;
     notifyListeners();

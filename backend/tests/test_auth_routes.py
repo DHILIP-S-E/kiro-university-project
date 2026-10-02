@@ -129,3 +129,30 @@ def test_deleting_the_account_removes_the_login_too(client):
     # the old token is still cryptographically valid, but the account is gone
     assert client.get("/auth/me", headers=headers).status_code == 401
     assert client.post("/auth/login", json={"email": "ada@example.com", "password": "correct horse"}).status_code == 401
+
+
+def test_export_includes_everything_the_user_created(client):
+    tokens = register(client).json()
+    h = {"Authorization": f"Bearer {tokens['access_token']}"}
+    assert client.post("/reminders", headers=h, json={"title": "Pay bill", "scheduled_at": "2030-01-01T09:00:00+00:00"}).status_code == 201
+    assert client.post("/events", headers=h, json={
+        "title": "AWS Hackathon", "event_type": "hackathon", "start_at": "2030-10-15T10:00:00+00:00",
+        "deadlines": [{"title": "Register", "deadline_type": "registration", "deadline_at": "2030-10-10T23:59:00+00:00"}],
+    }).status_code == 201
+    r = client.get("/account/export", headers=h)
+    assert r.status_code == 200
+    data = r.json()
+    assert [x["title"] for x in data["reminders"]] == ["Pay bill"]
+    assert data["events"][0]["title"] == "AWS Hackathon"
+    assert data["events"][0]["deadlines"][0]["title"] == "Register"
+    assert data["user_id"] == tokens["user"]["id"]
+
+
+def test_one_users_data_is_never_in_another_users_export(client):
+    a = register(client, email="a@example.com").json()
+    b = register(client, email="b@example.com").json()
+    ha = {"Authorization": f"Bearer {a['access_token']}"}
+    hb = {"Authorization": f"Bearer {b['access_token']}"}
+    client.post("/reminders", headers=ha, json={"title": "A's secret"})
+    assert client.get("/account/export", headers=hb).json()["reminders"] == []
+    assert client.get("/reminders", headers=hb).json() == []

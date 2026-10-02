@@ -11,7 +11,11 @@ import 'package:personal_memory_os/core/theme/app_theme.dart';
 import 'package:personal_memory_os/shared/widgets/ai_suggestion_banner.dart';
 
 class EventCreateScreen extends StatefulWidget {
-  const EventCreateScreen({super.key});
+  /// Text shared into the app (share sheet) or pasted before opening: it is
+  /// dropped into the extract tab and parsed straight away.
+  final String? initialText;
+
+  const EventCreateScreen({super.key, this.initialText});
 
   @override
   State<EventCreateScreen> createState() => _EventCreateScreenState();
@@ -42,6 +46,14 @@ class _EventCreateScreenState extends State<EventCreateScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    final shared = widget.initialText?.trim();
+    if (shared != null && shared.isNotEmpty) {
+      _tabController.index = 1;
+      _pasteController.text = shared;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _parseText();
+      });
+    }
   }
 
   @override

@@ -112,7 +112,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
         ..listenForRefresh();
       _reminders = ReminderProvider(
           OfflineReminderService(remoteReminders, queue, widget.store));
-      _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue), store: widget.store);
+      _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue), store: widget.store, pollInterval: const Duration(seconds: 5));
       _events = EventProvider(ApiEventService(client));
       _memory = MemoryProvider(ApiMemoryService(client), _aiService);
 

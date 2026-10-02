@@ -1,13 +1,13 @@
 import axios from 'axios';
-import { getIdToken, signOut } from './cognitoClient';
+import { getAccessToken, signOut } from './authClient';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
-// Request interceptor: attach id_token as Bearer
+// Request interceptor: attach the access token as Bearer (refreshed when needed)
 apiClient.interceptors.request.use(async (config) => {
-  const token = await getIdToken();
+  const token = await getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

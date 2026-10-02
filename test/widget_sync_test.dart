@@ -14,6 +14,9 @@ class RecordingBridge implements HomeWidgetBridge {
 
   @override
   Future<void> update(WidgetSnapshot snapshot) async => sent.add(snapshot);
+
+  @override
+  Future<bool> requestPin() async => false;
 }
 
 class EmptyReminders extends StubReminderService {

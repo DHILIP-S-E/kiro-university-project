@@ -112,7 +112,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
         ..listenForRefresh();
       _reminders = ReminderProvider(
           OfflineReminderService(remoteReminders, queue, widget.store));
-      _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue));
+      _captures = CaptureProvider(OfflineCaptureService(remoteCaptures, queue), store: widget.store);
       _events = EventProvider(ApiEventService(client));
       _memory = MemoryProvider(ApiMemoryService(client), _aiService);
 
@@ -133,7 +133,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
       _aiService = StubAiService();
       _accountService = StubAccountService();
       _reminders = ReminderProvider(StubReminderService());
-      _captures = CaptureProvider(StubCaptureService());
+      _captures = CaptureProvider(StubCaptureService(), store: widget.store);
       _events = EventProvider(StubEventService());
       _memory = MemoryProvider(StubMemoryService(), _aiService);
     }

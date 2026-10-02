@@ -8,9 +8,23 @@ from constructs import Construct
 
 BACKEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 
-BEDROCK_MODEL_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0"
-BEDROCK_MODEL_SONNET = "anthropic.claude-3-sonnet-20240229-v1:0"
+# Amazon Nova through the apac cross-region inference profile (works in Mumbai
+# with no model-access form). The model is a setting: swap the id, keep the rest.
+BEDROCK_MODEL_FAST = "apac.amazon.nova-lite-v1:0"    # parsing, extraction, capture summaries
+BEDROCK_MODEL_STRONG = "apac.amazon.nova-pro-v1:0"   # event summaries, memory Q&A
 EMBEDDING_MODEL = "amazon.titan-embed-text-v2:0"
+
+
+def invoke_model_arns(region: str, account: str, *profile_ids: str) -> list[str]:
+    """IAM resources needed to call models through inference profiles: the profile
+    itself plus the underlying foundation model in whichever region it routes to.
+    (Exactly these models; never a wildcard over all of Bedrock.)"""
+    arns: list[str] = []
+    for profile_id in profile_ids:
+        base_model = profile_id.split(".", 1)[1] if "." in profile_id.split(":")[0] else profile_id
+        arns.append(f"arn:aws:bedrock:{region}:{account}:inference-profile/{profile_id}")
+        arns.append(f"arn:aws:bedrock:*::foundation-model/{base_model}")
+    return arns
 
 
 def backend_function(

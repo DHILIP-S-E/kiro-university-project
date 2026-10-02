@@ -15,7 +15,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from stacks.common import BEDROCK_MODEL_HAIKU, backend_function
+from stacks.common import BEDROCK_MODEL_FAST, backend_function, invoke_model_arns
 
 
 class QueuesStack(Stack):
@@ -81,7 +81,7 @@ class QueuesStack(Stack):
             environment={
                 "DB_SECRET_ARN": db_secret.secret_arn,
                 "CAPTURE_BUCKET": bucket.bucket_name,
-                "BEDROCK_MODEL_HAIKU": BEDROCK_MODEL_HAIKU,
+                "BEDROCK_MODEL_FAST": BEDROCK_MODEL_FAST,
                 "BDA_PROJECT_ARN": bda_project_arn,
                 "BDA_PROFILE_ARN": bda_profile_arn,
                 "GUARDRAIL_ID": guardrail_id,
@@ -102,7 +102,7 @@ class QueuesStack(Stack):
         self.processor.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=[f"arn:aws:bedrock:{self.region}::foundation-model/{BEDROCK_MODEL_HAIKU}"],
+                resources=invoke_model_arns(self.region, self.account, BEDROCK_MODEL_FAST),
             )
         )
         self.processor.add_to_role_policy(

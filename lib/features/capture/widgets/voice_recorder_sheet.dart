@@ -114,9 +114,9 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.urgent.withOpacity(0.1),
+                color: AppColors.urgent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.urgent.withOpacity(0.3)),
+                border: Border.all(color: AppColors.urgent.withValues(alpha: 0.3)),
               ),
               child: Text(
                 _error!,
@@ -201,7 +201,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
                         color: (_isRecording
                                 ? AppColors.urgent
                                 : AppColors.captureVoice)
-                            .withOpacity(0.35),
+                            .withValues(alpha: 0.35),
                         blurRadius: 20,
                         spreadRadius: 4,
                       ),

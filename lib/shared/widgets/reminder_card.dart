@@ -61,7 +61,7 @@ class ReminderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isOverdue
-                ? AppColors.urgent.withOpacity(0.4)
+                ? AppColors.urgent.withValues(alpha: 0.4)
                 : AppColors.cardBorder,
           ),
         ),
@@ -208,9 +208,9 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [

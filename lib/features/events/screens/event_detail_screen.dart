@@ -136,7 +136,7 @@ class EventDetailScreen extends StatelessWidget {
                 border: Border.all(
                   color: d.deadlineAt.isBefore(
                           DateTime.now().add(const Duration(days: 3)))
-                      ? AppColors.urgent.withOpacity(0.4)
+                      ? AppColors.urgent.withValues(alpha: 0.4)
                       : AppColors.cardBorder,
                 ),
               ),
@@ -289,9 +289,9 @@ class _EventTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accent.withOpacity(0.15),
+        color: AppColors.accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Text(
         type.name.toUpperCase(),

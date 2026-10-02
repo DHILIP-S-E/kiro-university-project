@@ -115,12 +115,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.accent.withOpacity(0.12),
-                  AppColors.primaryLight.withOpacity(0.4),
+                  AppColors.accent.withValues(alpha: 0.12),
+                  AppColors.primaryLight.withValues(alpha: 0.4),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +269,7 @@ class _MessageBubble extends StatelessWidget {
                 color: isUser
                     ? AppColors.accent
                     : message.isError
-                        ? AppColors.urgent.withOpacity(0.15)
+                        ? AppColors.urgent.withValues(alpha: 0.15)
                         : AppColors.surfaceElevated,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),

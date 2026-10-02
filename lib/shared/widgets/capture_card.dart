@@ -65,7 +65,7 @@ class CaptureCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: AppColors.success.withOpacity(0.12),
+          color: AppColors.success.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(5),
         ),
         child: Row(
@@ -90,7 +90,7 @@ class CaptureCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: AppColors.info.withOpacity(0.12),
+          color: AppColors.info.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(5),
         ),
         child: Row(
@@ -138,7 +138,7 @@ class CaptureCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _typeColor.withOpacity(0.12),
+                color: _typeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(_typeIcon, color: _typeColor, size: 18),

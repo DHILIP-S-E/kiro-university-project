@@ -75,9 +75,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.urgent.withOpacity(0.15),
+                  color: AppColors.urgent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.urgent.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.urgent.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '$overdue overdue',
@@ -183,7 +183,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   padding: const EdgeInsets.only(right: 24),
                   margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.urgent.withOpacity(0.15),
+                    color: AppColors.urgent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.delete_outline,

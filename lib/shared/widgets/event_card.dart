@@ -78,9 +78,9 @@ class EventCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _typeColor.withOpacity(0.12),
+                color: _typeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _typeColor.withOpacity(0.3)),
+                border: Border.all(color: _typeColor.withValues(alpha: 0.3)),
               ),
               child: Icon(_typeIcon, color: _typeColor, size: 20),
             ),
@@ -170,8 +170,8 @@ class _DeadlineChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: isClose
-            ? AppColors.urgent.withOpacity(0.1)
-            : AppColors.warning.withOpacity(0.1),
+            ? AppColors.urgent.withValues(alpha: 0.1)
+            : AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

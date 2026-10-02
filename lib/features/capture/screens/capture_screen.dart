@@ -185,9 +185,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: color.withOpacity(0.25)),
+                      border: Border.all(color: color.withValues(alpha: 0.25)),
                     ),
                     child: Icon(icon, color: color, size: 22),
                   ),

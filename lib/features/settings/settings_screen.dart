@@ -64,7 +64,7 @@ class SettingsScreen extends StatelessWidget {
                 trailing: Switch(
                   value: true,
                   onChanged: (_) {},
-                  activeColor: AppColors.accent,
+                  activeThumbColor: AppColors.accent,
                 ),
                 onTap: null,
               ),
@@ -75,7 +75,7 @@ class SettingsScreen extends StatelessWidget {
                 trailing: Switch(
                   value: true,
                   onChanged: (_) {},
-                  activeColor: AppColors.accent,
+                  activeThumbColor: AppColors.accent,
                 ),
                 onTap: null,
               ),
@@ -148,7 +148,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.accent.withOpacity(0.2),
+            backgroundColor: AppColors.accent.withValues(alpha: 0.2),
             backgroundImage: user?.avatarUrl != null
                 ? NetworkImage(user!.avatarUrl!)
                 : null,
@@ -184,7 +184,7 @@ class SettingsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(

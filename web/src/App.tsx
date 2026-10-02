@@ -6,7 +6,6 @@ import Layout from './components/Layout';
 
 import SignInScreen from './features/auth/screens/SignInScreen';
 import SignUpScreen from './features/auth/screens/SignUpScreen';
-import ForgotPasswordScreen from './features/auth/screens/ForgotPasswordScreen';
 import DashboardScreen from './features/dashboard/DashboardScreen';
 import RemindersScreen from './features/reminders/RemindersScreen';
 import EventsScreen from './features/events/EventsScreen';
@@ -33,7 +32,6 @@ export default function App() {
             {/* Public routes */}
             <Route path="/signin" element={<SignInScreen />} />
             <Route path="/signup" element={<SignUpScreen />} />
-            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>

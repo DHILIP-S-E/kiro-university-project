@@ -44,6 +44,17 @@ class PmosWidgetProvider : AppWidgetProvider() {
             renderAll(context)
         }
 
+        /**
+         * Ask the launcher to add the widget (the user confirms in a system dialog).
+         * False when the launcher does not support pinning; the user can still add it
+         * from the widget picker.
+         */
+        fun requestPin(context: Context): Boolean {
+            val manager = AppWidgetManager.getInstance(context)
+            if (!manager.isRequestPinAppWidgetSupported) return false
+            return manager.requestPinAppWidget(ComponentName(context, PmosWidgetProvider::class.java), null, null)
+        }
+
         fun renderAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(ComponentName(context, PmosWidgetProvider::class.java))

@@ -42,6 +42,7 @@ async def export_account(
         "event_deadlines": await rows(EventDeadline),
         "captures": await rows(Capture),
         "memory_documents": await rows(MemoryDocument),
+        "notification_deliveries": await rows(NotificationDelivery),
     }
 
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 # R1.7 lifecycle: scheduled -> triggered -> sent -> delivered | failed
-DELIVERY_STATUSES = ("scheduled", "triggered", "sent", "delivered", "failed")
+DELIVERY_STATUSES = ("scheduled", "triggered", "sent", "delivered", "failed", "retrying", "cancelled")
 
 
 class NotificationDelivery(Base):
@@ -25,3 +25,16 @@ class NotificationDelivery(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "reminder_id": self.reminder_id,
+            "user_id": self.user_id,
+            "channel": self.channel,
+            "status": self.status,
+            "fire_at": self.fire_at.isoformat() if self.fire_at else None,
+            "message_id": self.message_id,
+            "error": self.error,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

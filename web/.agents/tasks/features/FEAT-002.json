@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Build all auth screens (SignIn, SignUp, ForgotPassword) and the Dashboard. Depends on FEAT-001 (AuthContext, apiClient, types). Auth screens are the entry point to the whole app; Dashboard consumes the reminders, events, and captures API services which must be scaffolded here too.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Create web/src/features/auth/screens/SignInScreen.tsx: centered dark card, email + password inputs, sign-in button calling useAuth().signIn, error banner on failure, links to /signup and /forgot-password. On success navigate to /.",
     "Create web/src/features/auth/screens/SignUpScreen.tsx: email, password, confirm-password inputs. On submit call signUp(); show confirmation-code field; on confirmSignUp() success navigate to /signin with success toast.",
@@ -23,5 +23,5 @@
     "cd web && npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "1. Auth screens (SignIn, SignUp, ForgotPassword) were already created correctly by FEAT-001 stubs — no changes needed. 2. App.tsx and main.tsx were already complete from FEAT-001. 3. UploadUrlRequest in types/index.ts updated to match actual backend schema (file_extension + content_type, not mime_type + filename); RegisterCaptureRequest updated to include required capture_id field. 4. capturesApi.ts defines its own UploadUrlResponse locally (capture_id + s3_key + upload_url) since the backend returns capture_id which the shared type did not have. 5. DashboardScreen uses React Query with useQuery, date-fns for overdue/recency logic, and shows overdue reminders in a red border section at top. 6. All 5 API service files (remindersApi, eventsApi, capturesApi, memoryApi, aiApi) created with full typed signatures. 7. Build passes: 523 modules transformed, 0 TypeScript errors, dist/ produced in 2.35s."
 }

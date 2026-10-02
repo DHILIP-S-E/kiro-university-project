@@ -161,24 +161,19 @@ export interface Capture {
 }
 
 export interface UploadUrlRequest {
-  event_id?: string | null;
   capture_type: 'photo' | 'voice' | 'document';
-  mime_type: string;
-  filename: string;
-}
-
-export interface UploadUrlResponse {
-  upload_url: string;
-  storage_key: string;
-  expires_in: number;
+  file_extension: string;   // e.g. 'jpg', 'pdf', 'm4a'
+  content_type: string;     // e.g. 'image/jpeg', 'application/pdf'
+  event_id?: string | null;
 }
 
 export interface RegisterCaptureRequest {
-  event_id?: string | null;
-  capture_type: 'photo' | 'voice' | 'document';
+  capture_id: string;
   storage_key: string;
-  mime_type: string;
-  filename?: string;
+  capture_type: 'photo' | 'voice' | 'document';
+  event_id?: string | null;
+  mime_type?: string | null;
+  duration?: number | null;
 }
 
 export interface TextNoteRequest {

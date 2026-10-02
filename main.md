@@ -25,7 +25,7 @@ A mobile app combining a smart reminder engine with a personal memory system.
 - Flutter SDK ≥ 3.16
 - Dart SDK ≥ 3.2
 - AWS account, AWS CDK v2 and Docker (for deploying `infra/`)
-- Amazon Bedrock model access enabled (Claude 3, Titan)
+- Amazon Bedrock model access enabled (Amazon Nova, Titan)
 
 ### Install dependencies
 
@@ -160,7 +160,7 @@ PostgreSQL   (private)    (queues)     Scheduler
    │         └───────────────┘
    │                   │
    │           Amazon Bedrock
-   │           (Claude 3 / Titan)
+   │           (Amazon Nova / Titan)
    │                   │
    │         Bedrock Knowledge Bases
    │                   │
@@ -220,7 +220,7 @@ S3 upload → EventBridge → SQS → Lambda → Bedrock Data Automation
 | Amazon SQS | Async processing queues + DLQs |
 | Amazon EventBridge Scheduler | Reliable server-side reminder scheduling |
 | Amazon SNS | Push notification delivery |
-| Amazon Bedrock | NLP, summarization, extraction (Claude 3 / Titan) |
+| Amazon Bedrock | NLP, summarization, extraction (Amazon Nova / Titan) |
 | Bedrock Data Automation | Photo/audio/document extraction |
 | Bedrock Knowledge Bases | RAG — personal memory retrieval |
 | Amazon OpenSearch Serverless | Vector search for semantic queries |

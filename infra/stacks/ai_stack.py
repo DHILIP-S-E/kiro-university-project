@@ -56,7 +56,7 @@ class AiStack(Stack):
             ),
         )
 
-        # Guardrail applied to every Claude call (reminder parsing, event extraction,
+        # Guardrail applied to every model call (reminder parsing, event extraction,
         # summaries, memory Q&A, capture summaries). Personal content is legitimately
         # full of names and dates, so PII is not masked; only credentials are.
         filters = [

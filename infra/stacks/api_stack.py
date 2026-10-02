@@ -10,7 +10,7 @@ from aws_cdk import aws_rds as rds, aws_s3 as s3, aws_secretsmanager as secretsm
 from aws_cdk import aws_sns as sns, aws_sqs as sqs, aws_wafv2 as wafv2, triggers
 from constructs import Construct
 
-from stacks.common import BEDROCK_MODEL_HAIKU, BEDROCK_MODEL_SONNET, EMBEDDING_MODEL, backend_function
+from stacks.common import BEDROCK_MODEL_FAST, BEDROCK_MODEL_STRONG, EMBEDDING_MODEL, backend_function, invoke_model_arns
 
 
 class ApiStack(Stack):
@@ -59,8 +59,8 @@ class ApiStack(Stack):
             "KNOWLEDGE_BASE_ID": knowledge_base_id,
             "KNOWLEDGE_BASE_DATA_SOURCE_ID": data_source_id,
             "SNS_PLATFORM_APP_ARN": platform_app_arn,
-            "BEDROCK_MODEL_HAIKU": BEDROCK_MODEL_HAIKU,
-            "BEDROCK_MODEL_SONNET": BEDROCK_MODEL_SONNET,
+            "BEDROCK_MODEL_FAST": BEDROCK_MODEL_FAST,
+            "BEDROCK_MODEL_STRONG": BEDROCK_MODEL_STRONG,
             "GUARDRAIL_ID": guardrail_id,
             "GUARDRAIL_VERSION": guardrail_version,
         }
@@ -83,8 +83,8 @@ class ApiStack(Stack):
         self.api_fn.add_to_role_policy(iam.PolicyStatement(
             actions=["bedrock:InvokeModel"],
             resources=[
-                f"arn:aws:bedrock:{self.region}::foundation-model/{m}"
-                for m in (BEDROCK_MODEL_HAIKU, BEDROCK_MODEL_SONNET, EMBEDDING_MODEL)
+                *invoke_model_arns(self.region, self.account, BEDROCK_MODEL_FAST, BEDROCK_MODEL_STRONG),
+                f"arn:aws:bedrock:{self.region}::foundation-model/{EMBEDDING_MODEL}",
             ],
         ))
         self.api_fn.add_to_role_policy(iam.PolicyStatement(

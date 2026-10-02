@@ -22,6 +22,8 @@ class MainActivity : FlutterActivity() {
             if (call.method == "update" && call.arguments is String) {
                 PmosWidgetProvider.store(applicationContext, call.arguments as String)
                 result.success(null)
+            } else if (call.method == "pin") {
+                result.success(PmosWidgetProvider.requestPin(applicationContext))
             } else {
                 result.notImplemented()
             }

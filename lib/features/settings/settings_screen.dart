@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:personal_memory_os/core/providers/auth_provider.dart';
 import 'package:personal_memory_os/core/services/account_service.dart';
 import 'package:personal_memory_os/core/theme/app_theme.dart';
+import 'package:personal_memory_os/core/widget/home_widget_bridge.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -113,6 +114,14 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: 'Permanently remove everything',
                 titleColor: AppColors.urgent,
                 onTap: () => _showDeleteDialog(context),
+              ),
+            ]),
+            _buildSection('Home screen', [
+              _SettingsTile(
+                icon: Icons.widgets_outlined,
+                title: 'Add home-screen widget',
+                subtitle: 'See overdue items and today at a glance',
+                onTap: () => _addWidget(context),
               ),
             ]),
             _buildSection('Account', [
@@ -244,6 +253,16 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _addWidget(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final pinned = await context.read<HomeWidgetBridge>().requestPin();
+    messenger.showSnackBar(SnackBar(
+      content: Text(pinned
+          ? 'Confirm in the dialog to place the widget'
+          : 'Long-press your home screen, choose Widgets, then Personal Memory OS'),
+    ));
   }
 
   Future<void> _exportData(BuildContext context) async {

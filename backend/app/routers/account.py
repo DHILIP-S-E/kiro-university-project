@@ -8,6 +8,7 @@ import logging
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import delete, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user_id
@@ -32,14 +33,15 @@ async def export_account(
 ):
     """Return all of the user's data as one JSON document."""
 
-    async def rows(model):
-        result = await db.execute(select(model).where(model.user_id == user_id))
+    async def rows(model, *options):
+        result = await db.execute(select(model).options(*options).where(model.user_id == user_id))
         return [r.to_dict() for r in result.scalars().all()]
 
     return {
         "user_id": user_id,
         "reminders": await rows(Reminder),
-        "events": await rows(Event),
+        # Event.to_dict() reads deadlines; load them up front (no lazy IO in async code).
+        "events": await rows(Event, selectinload(Event.deadlines)),
         "event_deadlines": await rows(EventDeadline),
         "captures": await rows(Capture),
         "memory_documents": await rows(MemoryDocument),

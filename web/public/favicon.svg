@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Personal Memory OS">
-  <rect width="64" height="64" rx="14" fill="#0F1117"/>
+  <rect width="64" height="64" rx="14" fill="#0F0F0F"/>
   <!-- bell: reminders -->
-  <path d="M32 12c-8 0-14 6-14 14v8l-4 6h36l-4-6v-8c0-8-6-14-14-14z" fill="none" stroke="#7C6AF7" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M27 46a5 5 0 0 0 10 0" fill="none" stroke="#7C6AF7" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 12c-8 0-14 6-14 14v8l-4 6h36l-4-6v-8c0-8-6-14-14-14z" fill="none" stroke="#6366F1" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M27 46a5 5 0 0 0 10 0" fill="none" stroke="#6366F1" stroke-width="4" stroke-linecap="round"/>
   <!-- spark: memory -->
-  <circle cx="45" cy="17" r="5" fill="#7C6AF7"/>
+  <circle cx="45" cy="17" r="5" fill="#6366F1"/>
 </svg>

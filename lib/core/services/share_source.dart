@@ -41,6 +41,8 @@ class PluginShareSource implements ShareSource {
 }
 
 class NoShareSource implements ShareSource {
+  const NoShareSource();
+
   @override
   Future<String?> initialText() async => null;
 

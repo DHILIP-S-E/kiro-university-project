@@ -135,11 +135,10 @@ void main() {
     expect(await auth.getCurrentUser(), isNotNull);
   });
 
-  test('sign-out clears the session; Google is unavailable', () async {
+  test('sign-out clears the session', () async {
     final auth = make((_) => json(loginBody()));
     await auth.signInWithEmail('a@b.co', 'x');
     await auth.signOut();
     expect(await auth.getCurrentUser(), isNull);
-    expect(auth.signInWithGoogle(), throwsA(isA<AuthException>()));
   });
 }

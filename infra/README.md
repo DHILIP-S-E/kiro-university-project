@@ -1,4 +1,11 @@
-# Infrastructure (AWS CDK, Python)
+# Infrastructure
+
+**What is deployed today is the lean setup in [`deploy/`](deploy/README.md)** (App Runner + Amplify +
+Neon, about $6-10 a month). The rest of this file describes the larger AWS CDK design in
+`stacks/` (Lambda, Aurora, OpenSearch, WAF, ...), kept for when that scale is wanted. It costs
+roughly $25-500 a month depending on options and is not deployed.
+
+## CDK design (AWS CDK, Python)
 
 Eleven stacks, deployed in dependency order by `app.py`:
 

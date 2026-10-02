@@ -10,13 +10,27 @@ class NlpReminderResult {
   final ReminderPriority priority;
   final List<String> offsets;
 
+  /// Things the user must confirm before creating (missing date, past date,
+  /// assumed time, ...). Empty when the parse is unambiguous.
+  final List<String> ambiguities;
+
   const NlpReminderResult({
     required this.title,
     required this.type,
     this.scheduledAt,
     required this.priority,
     required this.offsets,
+    this.ambiguities = const [],
   });
+
+  /// Copy with a user-chosen date/time; resolves the date-related ambiguities.
+  NlpReminderResult withScheduledAt(DateTime value) => NlpReminderResult(
+        title: title,
+        type: type,
+        scheduledAt: value,
+        priority: priority,
+        offsets: offsets,
+      );
 }
 
 /// Event extraction result from Bedrock.

@@ -151,6 +151,57 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
     );
   }
 
+  /// AI is unsure about the date: the user picks it, then confirms (AI suggests,
+  /// the user confirms).
+  Future<void> _pickNlpDateTime() async {
+    final current = _nlpResult!.scheduledAt ?? DateTime.now().add(const Duration(hours: 1));
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current.isAfter(DateTime.now()) ? current : DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _nlpResult = _nlpResult!.withScheduledAt(
+        DateTime(date.year, date.month, date.day, time.hour, time.minute),
+      );
+    });
+  }
+
+  Widget _buildAmbiguityCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.help_outline, color: Colors.amber, size: 18),
+            SizedBox(width: 8),
+            Text('Please check', style: AppTextStyles.labelLarge),
+          ]),
+          const SizedBox(height: 8),
+          for (final message in _nlpResult!.ambiguities)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(message, style: AppTextStyles.bodyMedium),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -226,7 +277,7 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
               Switch(
                 value: _alarmEnabled,
                 onChanged: (v) => setState(() => _alarmEnabled = v),
-                activeColor: AppColors.accent,
+                activeThumbColor: AppColors.accent,
               ),
             ],
           ),
@@ -237,7 +288,7 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
               Switch(
                 value: _recurring,
                 onChanged: (v) => setState(() => _recurring = v),
-                activeColor: AppColors.accent,
+                activeThumbColor: AppColors.accent,
               ),
             ],
           ),
@@ -264,9 +315,9 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.08),
+              color: AppColors.accent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accent.withOpacity(0.2)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -312,14 +363,17 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
           ),
           if (_nlpResult != null) ...[
             const SizedBox(height: 24),
+            if (_nlpResult!.ambiguities.isNotEmpty) _buildAmbiguityCard(),
             AiSuggestionBanner(
               message: _nlpResult!.title,
               detail: _nlpResult!.scheduledAt != null
                   ? '${_nlpResult!.scheduledAt!.toLocal()}'
                   : null,
-              confirmLabel: 'Create Reminder',
+              confirmLabel: _nlpResult!.ambiguities.isEmpty
+                  ? 'Create Reminder'
+                  : 'Choose date & time',
               dismissLabel: 'Edit',
-              onConfirm: _saveNlp,
+              onConfirm: _nlpResult!.ambiguities.isEmpty ? _saveNlp : _pickNlpDateTime,
               onDismiss: () => setState(() => _nlpResult = null),
             ),
             if (_nlpResult!.offsets.isNotEmpty) ...[
@@ -346,7 +400,7 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
                           .map((o) => Chip(
                                 label: Text(o),
                                 backgroundColor:
-                                    AppColors.accent.withOpacity(0.1),
+                                    AppColors.accent.withValues(alpha: 0.1),
                                 labelStyle: const TextStyle(
                                     color: AppColors.accent,
                                     fontSize: 12),
@@ -506,7 +560,7 @@ class _ReminderCreateScreenState extends State<ReminderCreateScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? color.withOpacity(0.2) : AppColors.surface,
+                color: selected ? color.withValues(alpha: 0.2) : AppColors.surface,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: selected ? color : AppColors.cardBorder,

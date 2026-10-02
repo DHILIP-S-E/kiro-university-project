@@ -54,6 +54,9 @@ class ApiAiService implements AiService {
       scheduledAt: scheduledAt,
       priority: priority,
       offsets: offsets,
+      ambiguities: (data['ambiguities'] as List<dynamic>? ?? [])
+          .map((a) => (a as Map<String, dynamic>)['message'] as String)
+          .toList(),
     );
   }
 

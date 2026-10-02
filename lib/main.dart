@@ -28,7 +28,7 @@ import 'package:personal_memory_os/core/services/api_client.dart';
 import 'package:personal_memory_os/core/services/api_event_service.dart';
 import 'package:personal_memory_os/core/services/api_memory_service.dart';
 import 'package:personal_memory_os/core/services/api_reminder_service.dart';
-import 'package:personal_memory_os/core/services/cognito_auth_service.dart';
+import 'package:personal_memory_os/core/services/app_auth_service.dart';
 import 'package:personal_memory_os/core/services/device_service.dart';
 import 'package:personal_memory_os/core/services/notification_service.dart';
 import 'package:personal_memory_os/core/services/push_registration.dart';
@@ -107,14 +107,14 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
     super.initState();
 
     if (widget.useRealBackend) {
-      final cognito = CognitoAuthService();
-      final client = ApiClient(getToken: cognito.getAccessToken);
+      final auth = AppAuthService();
+      final client = ApiClient(getToken: auth.getAccessToken);
       final queue = SyncQueue(widget.store);
 
       final remoteReminders = ApiReminderService(client);
       final remoteCaptures = ApiCaptureService(client);
 
-      _authService = cognito;
+      _authService = auth;
       _aiService = ApiAiService(client);
       _accountService = ApiAccountService(client);
       // Swap NoPushTokenSource for a firebase_messaging-backed source to enable cloud push.

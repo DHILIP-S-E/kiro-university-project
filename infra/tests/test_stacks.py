@@ -44,7 +44,10 @@ def test_media_bucket_is_private_encrypted_and_tls_only(templates):
             "ServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms", "KMSMasterKeyID": Match.any_value()}
         })]},
         "VersioningConfiguration": {"Status": "Enabled"},
-        "NotificationConfiguration": {"EventBridgeConfiguration": {"EventBridgeEnabled": True}},
+    })
+    # EventBridge delivery is enabled through CDK's bucket-notifications resource.
+    t.has_resource_properties("Custom::S3BucketNotifications", {
+        "NotificationConfiguration": Match.object_like({"EventBridgeConfiguration": {}}),
     })
     t.has_resource_properties("AWS::S3::BucketPolicy", {"PolicyDocument": {"Statement": Match.array_with([
         Match.object_like({"Effect": "Deny", "Condition": {"Bool": {"aws:SecureTransport": "false"}}})
@@ -179,3 +182,27 @@ def test_reminder_failures_alarm_on_first_error(templates):
         "AlarmDescription": "Captures landed in the dead-letter queue",
     })
     t.resource_count_is("AWS::CloudWatch::Dashboard", 1)
+
+
+def test_guardrail_blocks_prompt_attacks_and_masks_credentials(templates):
+    t = templates["Ai"]
+    t.has_resource_properties("AWS::Bedrock::Guardrail", {
+        "ContentPolicyConfig": {"FiltersConfig": Match.array_with([
+            Match.object_like({"Type": "PROMPT_ATTACK", "InputStrength": "HIGH"}),
+        ])},
+        "SensitiveInformationPolicyConfig": {"PiiEntitiesConfig": Match.array_with([
+            Match.object_like({"Type": "AWS_SECRET_KEY", "Action": "ANONYMIZE"}),
+        ])},
+    })
+    t.resource_count_is("AWS::Bedrock::GuardrailVersion", 1)
+
+
+def test_callers_get_the_guardrail_and_permission(templates):
+    for name in ("Api", "Queues"):
+        t = templates[name]
+        envs = [f["Properties"]["Environment"]["Variables"] for f in t.find_resources("AWS::Lambda::Function").values()
+                if "Environment" in f["Properties"]]
+        assert any("GUARDRAIL_ID" in e and "GUARDRAIL_VERSION" in e for e in envs), name
+        t.has_resource_properties("AWS::IAM::Policy", {"PolicyDocument": {"Statement": Match.array_with([
+            Match.object_like({"Action": "bedrock:ApplyGuardrail"}),
+        ])}})

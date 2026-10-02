@@ -36,6 +36,9 @@ class ApiStack(Stack):
         knowledge_base_id: str,
         knowledge_base_arn: str,
         data_source_id: str,
+        guardrail_id: str,
+        guardrail_arn: str,
+        guardrail_version: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -58,6 +61,8 @@ class ApiStack(Stack):
             "SNS_PLATFORM_APP_ARN": platform_app_arn,
             "BEDROCK_MODEL_HAIKU": BEDROCK_MODEL_HAIKU,
             "BEDROCK_MODEL_SONNET": BEDROCK_MODEL_SONNET,
+            "GUARDRAIL_ID": guardrail_id,
+            "GUARDRAIL_VERSION": guardrail_version,
         }
 
         # ── API function ─────────────────────────────────────────────────────
@@ -81,6 +86,9 @@ class ApiStack(Stack):
                 f"arn:aws:bedrock:{self.region}::foundation-model/{m}"
                 for m in (BEDROCK_MODEL_HAIKU, BEDROCK_MODEL_SONNET, EMBEDDING_MODEL)
             ],
+        ))
+        self.api_fn.add_to_role_policy(iam.PolicyStatement(
+            actions=["bedrock:ApplyGuardrail"], resources=[guardrail_arn]
         ))
         self.api_fn.add_to_role_policy(iam.PolicyStatement(
             actions=["bedrock:Retrieve"], resources=[knowledge_base_arn]

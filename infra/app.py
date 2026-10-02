@@ -49,6 +49,9 @@ def build(app: cdk.App) -> None:
         db_secret=database.secret,
         bda_project_arn=ai.bda_project.attr_project_arn,
         bda_profile_arn=ai.profile_arn,
+        guardrail_id=ai.guardrail_id,
+        guardrail_arn=ai.guardrail_arn,
+        guardrail_version=ai.guardrail_version_number,
         env=env,
     )
     scheduler = SchedulerStack(
@@ -80,6 +83,9 @@ def build(app: cdk.App) -> None:
         knowledge_base_id=search.knowledge_base_id,
         knowledge_base_arn=search.knowledge_base_arn,
         data_source_id=search.data_source_id,
+        guardrail_id=ai.guardrail_id,
+        guardrail_arn=ai.guardrail_arn,
+        guardrail_version=ai.guardrail_version_number,
         env=env,
     )
     MonitoringStack(

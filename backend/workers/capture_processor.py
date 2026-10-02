@@ -95,6 +95,13 @@ def text_from_result(result: dict) -> str:
     return "\n".join(p for p in parts if p.strip())
 
 
+def _guardrail_kwargs() -> dict:
+    gid, version = os.environ.get("GUARDRAIL_ID"), os.environ.get("GUARDRAIL_VERSION")
+    if not (gid and version):
+        return {}
+    return {"guardrailIdentifier": gid, "guardrailVersion": version}
+
+
 def summarise(text: str) -> dict:
     prompt = (
         "Summarise this captured content. Return ONLY JSON: "
@@ -109,6 +116,7 @@ def summarise(text: str) -> dict:
             "temperature": 0.1,
             "messages": [{"role": "user", "content": prompt}],
         }),
+        **_guardrail_kwargs(),
     )
     raw = json.loads(resp["body"].read())["content"][0]["text"]
     match = re.search(r"\{.*\}", raw, re.DOTALL)

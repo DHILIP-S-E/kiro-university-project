@@ -30,6 +30,9 @@ class QueuesStack(Stack):
         db_secret: secretsmanager.ISecret,
         bda_project_arn: str,
         bda_profile_arn: str,
+        guardrail_id: str,
+        guardrail_arn: str,
+        guardrail_version: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -81,6 +84,8 @@ class QueuesStack(Stack):
                 "BEDROCK_MODEL_HAIKU": BEDROCK_MODEL_HAIKU,
                 "BDA_PROJECT_ARN": bda_project_arn,
                 "BDA_PROFILE_ARN": bda_profile_arn,
+                "GUARDRAIL_ID": guardrail_id,
+                "GUARDRAIL_VERSION": guardrail_version,
             },
         )
         self.processor.add_event_source(
@@ -99,6 +104,9 @@ class QueuesStack(Stack):
                 actions=["bedrock:InvokeModel"],
                 resources=[f"arn:aws:bedrock:{self.region}::foundation-model/{BEDROCK_MODEL_HAIKU}"],
             )
+        )
+        self.processor.add_to_role_policy(
+            iam.PolicyStatement(actions=["bedrock:ApplyGuardrail"], resources=[guardrail_arn])
         )
         self.processor.add_to_role_policy(
             iam.PolicyStatement(

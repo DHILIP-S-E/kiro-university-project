@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 
@@ -23,11 +23,11 @@ class Settings(BaseSettings):
     capture_queue_url: str = ""
     knowledge_base_id: str = ""              # empty = keyword search only
     knowledge_base_data_source_id: str = ""
+    guardrail_id: str = ""                   # empty = no guardrail (local dev)
+    guardrail_version: str = ""
     sns_platform_app_arn: str = ""           # FCM/APNs platform application
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 @lru_cache()

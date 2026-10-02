@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Overdue items, what is left today and the next deadlines.</string>
+    <string name="widget_title">Today</string>
+    <string name="widget_empty">Open Personal Memory OS to see your day.</string>
+</resources>

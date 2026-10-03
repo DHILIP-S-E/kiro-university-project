@@ -85,7 +85,8 @@ def main() -> int:
     })
     workshop = post("/events", {"title": "Bedrock Agents Workshop", "event_type": "workshop",
                                 "start_at": iso(now - timedelta(days=3)), "location": "Bangalore"})
-    step("created 2 events")
+    http.patch(f"/events/{workshop['id']}", json={"status": "completed"}, headers=auth).raise_for_status()
+    step("created 2 events (the workshop is marked completed)")
 
     note_ids = [post("/captures/note", {"content": text, "event_id": workshop["id"]})["id"] for text in NOTES]
     step(f"added {len(note_ids)} notes to the workshop; waiting for the AI to process them")

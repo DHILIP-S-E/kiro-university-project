@@ -17,6 +17,7 @@ void main() {
       expect(authRedirect(AuthStatus.authenticated, '/reminders'), isNull);
     });
 
+
     test('while the session is being restored only the loading screen shows', () {
       for (final loc in ['/today', '/reminders', AppRoutes.auth]) {
         expect(authRedirect(AuthStatus.unknown, loc), AppRoutes.splash);

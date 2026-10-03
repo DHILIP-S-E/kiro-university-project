@@ -221,7 +221,7 @@ class _PersonalMemoryOsAppState extends State<PersonalMemoryOsApp> {
       ],
       child: MaterialApp.router(
         title: 'Personal Memory OS',
-        theme: AppTheme.dark,
+        theme: AppTheme.light,
         routerConfig: _router,
         debugShowCheckedModeBanner: false,
       ),

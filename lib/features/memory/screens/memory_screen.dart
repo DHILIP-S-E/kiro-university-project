@@ -34,7 +34,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
         child: CustomScrollView(
           slivers: [
             _buildHeader(context),
-            _buildAiBar(context),
             _buildEventTimeline(context),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
@@ -76,67 +75,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAiBar(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-        child: GestureDetector(
-          onTap: () => context.push(AppRoutes.aiChat),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.accent.withValues(alpha: 0.15),
-                  AppColors.primaryLight.withValues(alpha: 0.5),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.psychology_outlined,
-                    color: AppColors.accent,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Ask your memory',
-                        style: AppTextStyles.titleMedium,
-                      ),
-                      Text(
-                        '"What did I learn about Bedrock Agents?"',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: AppColors.accent),
-              ],
-            ),
-          ),
         ),
       ),
     );
